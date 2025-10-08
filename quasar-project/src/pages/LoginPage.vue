@@ -1,12 +1,13 @@
 <template>
-  <q-page class="flex flex-center">
+  <q-page class="flex flex-center bg-secondary">
     <q-card style="width: 400px;" flat bordered>
-      <q-card-section>
-        <div class="text-h6 q-mb-md">Log in</div>
-        <q-form @submit="login" class="q-gutter-md">
+      <q-card-section class="q-pa-lg">
+        <div class="text-h6 q-mb-lg">Log in</div>
+
+        <q-form @submit="login" class="q-gutter-y-md">
           <q-input
             v-model="email"
-            label="Email"
+            label="Email*"
             type="email"
             outlined
             required
@@ -19,7 +20,7 @@
 
           <q-input
             v-model="password"
-            label="Password"
+            label="Password*"
             type="password"
             outlined
             required
@@ -29,41 +30,63 @@
               <q-icon class="material-symbols-outlined">lock</q-icon>
             </template>
           </q-input>
+          <div>
+            <span class="forgot-link" @click="onForgotPassword">Forgot password?</span>
+          </div>
 
-          <q-btn type="submit" label="Log in" color="primary" class="full-width" />
+          <q-btn
+            type="submit"
+            label="Log in"
+            color="primary"
+            class="full-width"
+          />
         </q-form>
 
         <div class="q-mt-md text-center">
-          <span>Dont have account yet? </span>
-          <q-btn flat color="secondary" @click="goToRegister">Sign un</q-btn>
+          <span>Don't have account yet? </span>
+          <q-btn flat color="primary" @click="goToRegister">Sign up</q-btn>
         </div>
       </q-card-section>
     </q-card>
   </q-page>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" >
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-const email = ref('');
 const password = ref('');
+const email = ref('');
 
 const router = useRouter();
 
 const login = () => {
   // tu sa vola API potom
-  alert(`Logged in user: ${email.value}`);
+  alert(`Logged in: ${email.value}`);
   void router.push('/chat'); // presmerovanie po prihlaseni, toto este nemame, treba spravit ChatPAge.vue
 };
 
 const goToRegister = () => {
   void router.push('/register'); // presmerovanie na registrovanie pagu
 };
+
+const onForgotPassword = () => {
+  console.log('Forgot password clicked — page not implemented yet');
+};
 </script>
 
 <style scoped>
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+}
+
+.forgot-link {
+  color: var(--q-primary); /* používa primary farbu z Quasar témy */
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+}
+.forgot-link:hover {
+  opacity: 0.8;
 }
 </style>
