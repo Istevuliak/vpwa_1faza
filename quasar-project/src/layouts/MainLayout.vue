@@ -1,38 +1,46 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="lHh Rpr lFf">
+    <!-- HEADER -->
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        >
-          <q-icon class="material-symbols-outlined">menu</q-icon>
-        </q-btn>
 
-        <q-btn color="dark blue" flat @click="logout">
-          <q-icon class="material-symbols-outlined">logout</q-icon>
-          Log out
-        </q-btn>
-
-
-        <q-toolbar-title>
-          Name of our chat 
-
+        <!-- Názov chat appky v strede -->
+        <q-toolbar-title class="text-center">
+          Name of our chat
         </q-toolbar-title>
+
+        <!-- Ikony vpravo -->
+        <div class="row items-center q-gutter-sm">
+          <!-- Ikona používateľa (otvára pravé menu) -->
+          <q-btn
+            flat
+            dense
+            round
+            aria-label="User"
+            @click="toggleRightDrawer"
+          >
+            <q-icon class="material-symbols-outlined">account_circle</q-icon>
+          </q-btn>
+
+          <!-- Log out -->
+          <q-btn color="dark" flat @click="logout">
+            <q-icon class="material-symbols-outlined q-mr-xs">logout</q-icon>
+            Log out
+          </q-btn>
+        </div>
       </q-toolbar>
     </q-header>
 
+    <!-- PRAVÉ MENU (Drawer) -->
     <q-drawer
-      v-model="leftDrawerOpen"
+      side="right"
+      v-model="rightDrawerOpen"
       show-if-above
       bordered
     >
       <q-list>
         <q-item-label header>
-          Essential Links
+          User Menu
         </q-item-label>
 
         <EssentialLink
@@ -43,6 +51,7 @@
       </q-list>
     </q-drawer>
 
+    <!-- OBSAH -->
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -57,28 +66,29 @@ import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink
 const router = useRouter();
 
 const linksList: EssentialLinkProps[] = [
-  { title: 'Docs', caption: 'quasar.dev', icon: 'school', link: 'https://quasar.dev' },
-  { title: 'Github', caption: 'github.com/quasarframework', icon: 'code', link: 'https://github.com/quasarframework' },
-  { title: 'Discord Chat Channel', caption: 'chat.quasar.dev', icon: 'chat', link: 'https://chat.quasar.dev' },
-  { title: 'Forum', caption: 'forum.quasar.dev', icon: 'record_voice_over', link: 'https://forum.quasar.dev' },
-  { title: 'Twitter', caption: '@quasarframework', icon: 'rss_feed', link: 'https://twitter.quasar.dev' },
-  { title: 'Facebook', caption: '@QuasarFramework', icon: 'public', link: 'https://facebook.quasar.dev' },
-  { title: 'Quasar Awesome', caption: 'Community Quasar projects', icon: 'favorite', link: 'https://awesome.quasar.dev' }
+  { title: 'Profile', caption: 'User details', icon: 'person', link: '#' },
+  { title: 'Settings', caption: 'Account preferences', icon: 'settings', link: '#' },
+  { title: 'Help', caption: 'Get support', icon: 'help', link: '#' },
 ];
 
-const leftDrawerOpen = ref(false);
+const rightDrawerOpen = ref(false);
 
 const logout = async () => {
   alert('Log out successful!');
-  await router.push('/login'); // alebo void router.push('/login');
+  await router.push('/login');
 };
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
+function toggleRightDrawer() {
+  rightDrawerOpen.value = !rightDrawerOpen.value;
 }
 </script>
 
 <style scoped>
+.text-center {
+  flex: 1;
+  text-align: center;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
 }
