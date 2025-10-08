@@ -62,66 +62,76 @@
         </div>
 
         <!-- chatting -->
-        <div class="col-9 column">
-          <template v-if="activeChannel || activeFriend">
-            <div class="q-pa-md row items-center justify-between">
-              <div class="text-h6">{{ activeFriend ? activeFriend.name : activeChannel?.name }}</div>
+        <div class="col-9 column relative-position">
 
-              <!-- menu: only if channel -->
-              <div v-if="activeChannel">
+        <!-- obsah chatu -->
+        <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
+            <div class="q-pa-md row items-center justify-between">
+            <div class="text-h6">
+                {{ activeFriend ? activeFriend.name : activeChannel?.name }}
+            </div>
+
+            <!-- menu: only if channel -->
+            <div v-if="activeChannel">
                 <q-btn flat round dense icon="more_vert">
-                  <q-menu>
+                <q-menu>
                     <q-list style="min-width: 150px;">
-                      <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
+                    <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
                         <q-item-section>Add people</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="showRemovePeopleDialog = true">
+                    </q-item>
+                    <q-item clickable v-close-popup @click="showRemovePeopleDialog = true">
                         <q-item-section>Remove people</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="leaveChannel">
+                    </q-item>
+                    <q-item clickable v-close-popup @click="leaveChannel">
                         <q-item-section>Leave channel</q-item-section>
-                      </q-item>
-                      <q-item
+                    </q-item>
+                    <q-item
                         clickable
                         v-close-popup
                         v-if="activeChannel?.isAdmin"
                         @click="deleteChannel"
-                      >
+                    >
                         <q-item-section class="text-negative">Delete channel</q-item-section>
-                      </q-item>
+                    </q-item>
                     </q-list>
-                  </q-menu>
+                </q-menu>
                 </q-btn>
-              </div>
+            </div>
             </div>
 
             <q-separator />
 
-            <!-- spravy -->
-            <div class="col scroll q-pa-md">
-              <div v-for="msg in currentMessages" :key="msg.id" class="q-mb-sm">
+            <!-- správy -->
+            <div class="col scroll q-pa-md" style="flex: 1; overflow-y: auto;">
+            <div v-for="msg in currentMessages" :key="msg.id" class="q-mb-sm">
                 <b>{{ msg.user }}:</b> {{ msg.text }}
-              </div>
             </div>
-
-            <!-- riadok na input, toto ma byt fixne?? ze to sa berie ako prikazovy riadok?  -->
-            <div class="row q-pa-sm bg-grey-2">
-              <q-input
-                v-model="newMessage"
-                placeholder="Type a message..."
-                outlined
-                dense
-                class="col"
-                @keyup.enter="sendMessage"
-              />
-              <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
             </div>
-          </template>
-
-          <div v-else class="flex flex-center col text-grey">
-            <div>Select a channel or friend to start chatting</div>
-          </div>
         </div>
+
+        <!-- ak nič nie je vybrané -->
+        <div v-else class="flex flex-center col text-grey" style="flex: 1;">
+            <div>Select a channel or friend to start chatting</div>
+        </div>
+
+        <!-- fixný spodný riadok na odoslanie -->
+        <div
+            class="row q-pa-sm bg-grey-2"
+            style="position: sticky; bottom: 0; border-top: 1px solid #ccc;"
+        >
+            <q-input
+            v-model="newMessage"
+            placeholder="Type a message..."
+            outlined
+            dense
+            class="col"
+            @keyup.enter="sendMessage"
+            />
+            <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
+        </div>
+
+        </div>
+
       </div>
     </div>
 
