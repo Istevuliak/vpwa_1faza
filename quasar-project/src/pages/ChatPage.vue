@@ -16,18 +16,15 @@
     <div class="column col bg-white">
       <!-- freinds aby to nebolo take prazdne, na zvazenie ci to potrebujeme a chceme mat -->
       <div class="row items-center justify-start q-pa-md q-gutter-md bg-grey-2">
-        <div
+        <ProfilePicture
           v-for="friend in friends"
           :key="friend.id"
-          class="column items-center cursor-pointer"
-          style="width: 60px;"
+          :friend="friend"
+          size="50px"
+          bgColor="grey-3"
           @click="openFriendChat(friend)"
-        >
-          <q-avatar size="50px"><img :src="friend.avatar" alt="avatar" /></q-avatar>
-          <div class="text-caption">{{ friend.name }}</div>
-        </div>
-
-        <!-- add freinds -->
+        />
+        <!-- Add friend tlačidlo -->
         <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
           <q-avatar size="50px" color="grey-4" text-color="black">
             <q-icon name="add" />
@@ -235,6 +232,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import ProfilePicture from '../components/ProfilePicture.vue';
 
 interface Friend { id: number; name: string; avatar: string; messages?: Message[]; }
 interface Message { id: number; user: string; text: string; }

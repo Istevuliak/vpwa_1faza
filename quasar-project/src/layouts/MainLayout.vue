@@ -4,9 +4,9 @@
     <q-header elevated>
       <q-toolbar>
 
-        <!-- Názov chat appky v strede -->
+        <!-- alebo este CLIck je pekny nazov na command line -->
         <q-toolbar-title class="text-center">
-          Name of our chat
+          Shello
         </q-toolbar-title>
 
         <!-- Ikony vpravo -->
