@@ -5,7 +5,7 @@
       <q-toolbar>
 
         <!-- alebo este CLIck je pekny nazov na command line -->
-        <q-toolbar-title class="text-center">
+        <q-toolbar-title class="text-left">
           Shello
         </q-toolbar-title>
 
@@ -35,7 +35,6 @@
     <q-drawer
       side="right"
       v-model="rightDrawerOpen"
-      show-if-above
       bordered
     >
       <q-list>

@@ -16,14 +16,22 @@
     <div class="column col bg-white">
       <!-- freinds aby to nebolo take prazdne, na zvazenie ci to potrebujeme a chceme mat -->
       <div class="row items-center justify-start q-pa-md q-gutter-md bg-grey-2">
-        <ProfilePicture
+        <div
           v-for="friend in friends"
           :key="friend.id"
-          :friend="friend"
-          size="50px"
-          bgColor="grey-3"
+          class="column items-center cursor-pointer"
+          style="width: 60px;"
           @click="openFriendChat(friend)"
-        />
+        >
+          <ProfilePicture
+            :avatar="friend.avatar"
+            size="50px"
+            bgColor="grey-3"
+          />
+          <div class="text-caption ellipsis">{{ friend.name }}</div>
+        </div>
+
+
         <!-- Add friend tlačidlo -->
         <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
           <q-avatar size="50px" color="grey-4" text-color="black">

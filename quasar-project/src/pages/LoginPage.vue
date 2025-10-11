@@ -12,6 +12,7 @@
             outlined
             required
             dense
+            maxlength="30"
           >
             <template v-slot:prepend>
               <q-icon class="material-symbols-outlined">email</q-icon>
@@ -20,14 +21,25 @@
 
           <q-input
             v-model="password"
+            :type="isPwdVisible ? 'password' : 'text'"
             label="Password*"
-            type="password"
             outlined
             required
             dense
+            :rules="[
+              value => (value && value.length >= 8 && /\d/.test(value)) || 'Enter at least 8 characters, with at least one number'
+            ]"
           >
             <template v-slot:prepend>
               <q-icon class="material-symbols-outlined">lock</q-icon>
+            </template>
+
+            <template v-slot:append>
+              <q-icon
+                :name="isPwdVisible ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwdVisible = !isPwdVisible"
+              />
             </template>
           </q-input>
           <div>
@@ -57,6 +69,7 @@ import { useRouter } from 'vue-router';
 
 const password = ref('');
 const email = ref('');
+const isPwdVisible = ref(true);
 
 const router = useRouter();
 
