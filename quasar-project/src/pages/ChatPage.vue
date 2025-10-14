@@ -121,19 +121,46 @@
 
         <!-- fixný spodný riadok na odoslanie -->
         <div
-            class="row q-pa-sm bg-grey-2"
-            style="position: sticky; bottom: 0; border-top: 1px solid #ccc;"
+          class="column bg-grey-2"
+          style="position: sticky; bottom: 0; border-top: 1px solid #444;"
         >
-            <q-input
+          <!-- História správ -->
+          <div
+            ref="historyBox"
+            class="message-history"
+            style="
+              max-height: 150px;
+              overflow-y: auto;
+              padding: 6px 12px;
+              font-family: monospace;
+              font-size: 14px;
+              color: #222;
+            "
+          >
+            <div v-for="(msg, index) in messages" :key="index">
+              {{ msg }}
+            </div>
+          </div>
+
+          <!-- Command line input -->
+          <q-input
+            ref="cliInput"
             v-model="newMessage"
-            placeholder="Type a message..."
-            outlined
-            dense
-            class="col"
-            @keyup.enter="sendMessage"
-            />
-            <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
+            type="textarea"
+            borderless
+            autogrow
+            input-class="command-input"
+            input-style="padding-left: 12px;"
+            :placeholder="showPlaceholder ? 'Enter a message' : ''"
+            @focus="showPlaceholder = false"
+            @blur="showPlaceholder = true"
+            @keyup.enter.exact.prevent="sendMessage"
+            @keyup.enter.shift.stop
+          />
+
+
         </div>
+
 
         </div>
 
@@ -239,7 +266,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import ProfilePicture from '../components/ProfilePicture.vue';
 
 interface Friend { id: number; name: string; avatar: string; messages?: Message[]; }
@@ -262,7 +289,6 @@ const invitations = ref<Invitation[]>([{ id: 1, from: 'Tomas', channel: 'Develop
 
 const activeChannel = ref<Channel | null>(null);
 const activeFriend = ref<Friend | null>(null);
-const newMessage = ref('');
 const currentMessages = computed(() => activeFriend.value?.messages || activeChannel.value?.messages || []);
 const invitationCount = computed(() => invitations.value.length);
 
@@ -277,14 +303,6 @@ const selectedFriends = ref<number[]>([]);
 
 const selectChannel = (ch: Channel) => { activeFriend.value = null; activeChannel.value = ch; };
 const openFriendChat = (f: Friend) => { activeChannel.value = null; activeFriend.value = f; };
-
-const sendMessage = () => {
-  if (!newMessage.value) return;
-  const msg: Message = { id: Date.now(), user: 'You', text: newMessage.value };
-  if (activeFriend.value) activeFriend.value.messages?.push(msg);
-  else if (activeChannel.value) activeChannel.value.messages.push(msg);
-  newMessage.value = '';
-};
 
 const addFriend = () => {
   const name = newFriendName.value.trim();
@@ -347,9 +365,53 @@ const removePeopleFromChannel = () => {
   showRemovePeopleDialog.value = false;
   selectedFriends.value = [];
 };
+
+// CLI fixne
+const historyBox = ref<HTMLElement | null>(null);
+const newMessage = ref("");
+const messages = ref<string[]>([]);
+const showPlaceholder = ref(true);
+
+function sendMessage() {
+  const text = newMessage.value.trim();
+  if (!text) return;
+
+  // Ak správa začína "/", ide do CLI (ako príkaz)
+  if (text.startsWith("/")) {
+    messages.value.push(text);
+  } else if (activeFriend.value || activeChannel.value) {
+    // Získame správny cieľ (friend alebo channel)
+    const target = activeFriend.value ?? activeChannel.value;
+
+    if (target?.messages) {
+      target.messages.push({
+        id: Date.now(),
+        user: "You",
+        text
+      });
+    }
+  } else {
+    // Ak nič nie je otvorené, fallback do CLI
+    messages.value.push(text);
+  }
+
+  newMessage.value = "";
+
+  // Scroll CLI iba ak išlo do histórie
+  void nextTick(() => {
+    if (text.startsWith("/") && historyBox.value) {
+      historyBox.value.scrollTop = historyBox.value.scrollHeight;
+    }
+  });
+}
 </script>
 
 <style scoped>
 .scroll { overflow-y: auto; height: 100%; }
 .relative-position { position: relative; }
+.command-input {
+  font-family: monospace;
+  max-height: 150px; 
+  overflow-y: auto;
+}
 </style>
