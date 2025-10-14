@@ -7,7 +7,7 @@
         round
         icon="chat"
         :color="showFriends ? 'bg-yellow-8' : 'primary'"
-        class="q-mb-md "
+        class="q-mb-md"
         title="Chats"
         @click="toggleFriends"
       />
@@ -16,13 +16,13 @@
         round
         icon="groups"
         :color="showChannels ? 'black' : 'primary'"
-        class="q-mb-md "
+        class="q-mb-md"
         title="Channels"
         @click="toggleChannels"
       />
 
       <!-- Invitations -->
-      <div class="relative-position q-mb-md ">
+      <div class="relative-position q-mb-md">
         <q-btn flat round icon="mail" color="primary" title="Invitations" @click="openInvitations" />
         <q-badge v-if="invitationCount > 0" color="red" floating transparent>{{ invitationCount }}</q-badge>
       </div>
@@ -31,7 +31,7 @@
     <!-- Hlavna cast chatu -->
     <div class="column col bg-white">
       <!-- freinds aby to nebolo take prazdne, na zvazenie ci to potrebujeme a chceme mat -->
-      <div class="row justify-start items-center q-pa-md bg-grey-2">
+      <div class="row justify-start items-center q-pa-md bg-yellow-2">
         <div
           v-for="friend in friends"
           :key="friend.id"
@@ -39,17 +39,20 @@
           style="width: 60px;"
           @click="openFriendChat(friend)"
         >
-          <ProfilePicture
-            :avatar="friend.avatar"
-            size="50px"
-            bgColor="grey-3"
-          />
+          <div class="relative-position">
+            <ProfilePicture
+              :avatar="friend.avatar"
+              size="50px"
+              bgColor="grey-3"
+            />
+            <div class="status-indicator" :class="`status-${friend.status}`"></div>
+          </div>
           <div class="text-caption ellipsis">{{ friend.name }}</div>
         </div>
 
         <!-- Add friend tlačidlo -->
         <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
-          <q-avatar size="50px" color="grey-4" text-color="black">
+          <q-avatar size="50px" color="yellow-8" text-color="black">
             <q-icon name="add" />
           </q-avatar>
           <div class="text-caption">Add friends</div>
@@ -59,7 +62,7 @@
       <!-- hlavna chatova cast -->
       <div class="row col">
         <!-- channels zoznams -->
-        <div v-if="showChannels" class="col-3 bg-grey-3 q-pa-sm" style="width: 250px; flex-shrink: 0;">
+        <div v-if="showChannels" class="col-3 bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
           <q-list bordered>
             <q-item-label header>
               <div class="row items-center">
@@ -103,7 +106,7 @@
         </div>
 
         <!-- friends zoznam -->
-        <div v-if="showFriends" class="col-3 bg-grey-3 q-pa-sm" style="width: 250px; flex-shrink: 0;">
+        <div v-if="showFriends" class="col-3 bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
           <q-list bordered>
             <q-item-label header>Friends</q-item-label>
             <q-item
@@ -114,12 +117,14 @@
               :active="activeFriend?.id === friend.id"
               active-class="bg-primary text-white"
             >
-              <ProfilePicture
-                :avatar="friend.avatar"
-                size="50px"
-                bgColor="grey-3"
-                class="q-mr-sm"
-              />
+              <div class="relative-position q-mr-sm">
+                <ProfilePicture
+                  :avatar="friend.avatar"
+                  size="50px"
+                  bgColor="grey-3"
+                />
+                <div class="status-indicator" :class="`status-${friend.status}`"></div>
+              </div>
               <q-item-section>{{ friend.name }}</q-item-section>
             </q-item>
 
@@ -131,11 +136,7 @@
         </div>
 
         <!-- chatting -->
-        <div
-          class="column relative-position"
-          style="flex: 1;"
-        >
-
+        <div class="column relative-position" style="flex: 1;">
           <!-- obsah chatu -->
           <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
             <div class="q-pa-md row items-center justify-between">
@@ -186,10 +187,8 @@
                 <q-btn flat round dense icon="more_vert">
                   <q-menu>
                     <q-list style="min-width: 150px;">
-                      <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
-                        <q-item-section class="text-negative" clickable v-close-popup @click="removeFriend(activeFriend.id)">
-                          Remove friend
-                        </q-item-section>
+                      <q-item clickable v-close-popup @click="removeFriend(activeFriend.id)">
+                        <q-item-section class="text-negative">Remove friend</q-item-section>
                       </q-item>
                     </q-list>
                   </q-menu>
@@ -218,10 +217,10 @@
           </div>
 
           <!-- fixný spodný riadok na odoslanie -->
-        <div
-          class="column bg-grey-2"
-          style="position: sticky; bottom: 0; border-top: 1px solid #444;"
-        >
+          <div
+            class="column bg-grey-2"
+            style="position: sticky; bottom: 0; border-top: 1px solid #444;"
+          >
             <!-- História správ -->
             <div
               ref="historyBox"
@@ -255,8 +254,6 @@
               @keyup.enter.exact.prevent="sendMessage"
               @keyup.enter.shift.stop
             />
-
-
           </div>
         </div>
       </div>
@@ -318,7 +315,6 @@
             dense
             class="q-mt-md"
           />
-
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
@@ -368,20 +364,62 @@
           <q-btn flat label="Remove" color="negative" @click="removePeopleFromChannel" />
         </q-card-actions>
       </q-card>
-      </q-dialog>
-    </q-page>
+    </q-dialog>
+
+    <!-- Dialog pre nastavenie stavu používateľa -->
+    <q-dialog v-model="showStatusDialog">
+      <q-card style="min-width: 300px;">
+        <q-card-section>
+          <div class="text-h6">Set your status</div>
+        </q-card-section>
+        <q-card-section>
+          <q-select
+            v-model="userStatus"
+            :options="statusOptions"
+            option-value="value"
+            option-label="label"
+            label="Status"
+            outlined
+            dense
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="black" v-close-popup />
+          <q-btn flat label="Save" color="primary" @click="saveUserStatus" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </q-page>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import ProfilePicture from '../components/ProfilePicture.vue';
 
-interface Friend { id: number; name: string; avatar: string; messages?: Message[]; }
+type UserStatus = 'online' | 'dnd' | 'offline';
+
+interface Friend { 
+  id: number; 
+  name: string; 
+  avatar: string; 
+  status: UserStatus;
+  messages?: Message[]; 
+}
 interface Message { id: number; user: string; text: string; }
 interface Channel { id: number; name: string; type: 'public' | 'private'; messages: Message[]; members?: number[]; isAdmin?: boolean; }
 interface Invitation { id: number; from: string; channel: string; }
 
-//zobrazenie channel listu
+// Status options
+const statusOptions = [
+  { label: 'Online', value: 'online' as const },
+  { label: 'Do Not Disturb', value: 'dnd' as const },
+  { label: 'Offline', value: 'offline' as const },
+];
+
+// Aktuálny stav používateľa (statický pre tento príklad)
+const userStatus = ref<UserStatus>('online');
+
+// zobrazenie channel listu
 const showChannels = ref(true); // defaultne true
 const toggleChannels = () => {
   showChannels.value = !showChannels.value;
@@ -396,11 +434,11 @@ const toggleFriends = () => {
 };
 
 const friends = ref<Friend[]>([
-    // zmenit im profilovky to je strasne
-  { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', messages: [] },
-  { id: 2, name: 'Katka', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', messages: [] },
-  { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', messages: [] },
-  { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', messages: [] },
+  // zmenit im profilovky, toto je hrozneee
+  { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
+  { id: 2, name: 'Katka', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', status: 'offline', messages: [] },
+  { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', status: 'dnd', messages: [] },
+  { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'dnd', messages: [] },
 ]);
 
 const newChannelType = ref<'public' | 'private'>('public');
@@ -421,6 +459,7 @@ const showInvitationsDialog = ref(false);
 const showCreateChannelDialog = ref(false);
 const showAddPeopleDialog = ref(false);
 const showRemovePeopleDialog = ref(false);
+const showStatusDialog = ref(false);
 const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
@@ -450,12 +489,15 @@ const addFriend = () => {
     id: friends.value.length + 1,
     name,
     avatar: 'https://cdn.quasar.dev/img/avatar.png',
+    status: 'offline' as const,
     messages: [],
   };
   friends.value.unshift(newFr);
   activeFriend.value = newFr;
-  newFriendName.value = ''; showAddFriendDialog.value = false;
+  newFriendName.value = ''; 
+  showAddFriendDialog.value = false;
 };
+
 const removeFriend = (id: number) => {
   friends.value = friends.value.filter(f => f.id !== id);
   if (activeFriend.value?.id === id) activeFriend.value = null;
@@ -482,7 +524,6 @@ const filteredChannels = computed(() => {
   if (channelFilter.value === 'all') return channels.value;
   return channels.value.filter(ch => ch.type === channelFilter.value);
 });
-
 
 const createChannel = () => {
   const name = newChannelName.value.trim();
@@ -520,22 +561,26 @@ const leaveChannel = () => {
   channels.value = channels.value.filter(ch => ch.id !== activeChannel.value!.id);
   activeChannel.value = null;
 };
+
 const deleteChannel = () => {
   if (!activeChannel.value) return;
   channels.value = channels.value.filter(ch => ch.id !== activeChannel.value!.id);
   activeChannel.value = null;
 };
+
 const getChannelMembers = () => {
   if (!activeChannel.value?.members) return [];
   return friends.value.filter(f => activeChannel.value!.members!.includes(f.id))
     .map(f => ({ label: f.name, value: f.id }));
 };
+
 const addPeopleToChannel = () => {
   if (!activeChannel.value) return;
   activeChannel.value.members = Array.from(new Set([...(activeChannel.value.members || []), ...selectedFriends.value]));
   showAddPeopleDialog.value = false;
   selectedFriends.value = [];
 };
+
 const removePeopleFromChannel = () => {
   if (!activeChannel.value) return;
   activeChannel.value.members = (activeChannel.value.members ?? []).filter(
@@ -544,12 +589,17 @@ const removePeopleFromChannel = () => {
   showRemovePeopleDialog.value = false;
   selectedFriends.value = [];
 };
+
 const toggleChannelType = (val: 'public' | 'private') => {
-  if (!activeChannel.value) return
-  activeChannel.value.type = val
-}
+  if (!activeChannel.value) return;
+  activeChannel.value.type = val;
+};
 
-
+// Funkcia na uloženie stavu používateľa
+const saveUserStatus = () => {
+  // Tu by sa stav uložil na server, momentálne len zatvoríme dialog
+  showStatusDialog.value = false;
+};
 
 // CLI fixne
 const historyBox = ref<HTMLElement | null>(null);
@@ -642,5 +692,29 @@ function sendMessage() {
 }
 .mention-message {
   background-color: #ffe6e6; /* Svetloružové pozadie pre správy začínajúce na @ */
+}
+
+/* Status indicators */
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  z-index: 1;
+}
+
+.status-online {
+  background-color: #4CAF50; /* Zelená pre online */
+}
+
+.status-dnd {
+  background-color: #F44336; /* Červená pre DND */
+}
+
+.status-offline {
+  background-color: #9E9E9E; /* Šedá pre offline */
 }
 </style>
