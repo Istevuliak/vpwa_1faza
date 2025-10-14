@@ -1,13 +1,13 @@
 <template>
-  <q-page class="row no-wrap bg-grey-1">
+  <q-page class="row no-wrap bg-secondary">
     <!-- Sidebar na lavo -->
-    <div class="column items-center bg-grey-3 q-pa-md" style="width: 100px;">
+    <div class="column items-center bg-secondary q-pa-md" style="width: 100px;">
       <q-btn
         flat
         round
         icon="chat"
-        :color="showFriends ? 'black' : 'primary'"
-        class="q-mb-md"
+        :color="showFriends ? 'bg-yellow-8' : 'primary'"
+        class="q-mb-md "
         title="Chats"
         @click="toggleFriends"
       />
@@ -16,13 +16,13 @@
         round
         icon="groups"
         :color="showChannels ? 'black' : 'primary'"
-        class="q-mb-md"
+        class="q-mb-md "
         title="Channels"
         @click="toggleChannels"
       />
 
       <!-- Invitations -->
-      <div class="relative-position q-mb-md">
+      <div class="relative-position q-mb-md ">
         <q-btn flat round icon="mail" color="primary" title="Invitations" @click="openInvitations" />
         <q-badge v-if="invitationCount > 0" color="red" floating transparent>{{ invitationCount }}</q-badge>
       </div>
@@ -268,7 +268,7 @@
         <q-card-section><div class="text-h6">Add new friend</div></q-card-section>
         <q-card-section><q-input v-model="newFriendName" label="Friend name" outlined dense autofocus /></q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="secondary" v-close-popup />
+          <q-btn flat label="Cancel" color="black" v-close-popup />
           <q-btn flat label="Add" color="primary" @click="addFriend" />
         </q-card-actions>
       </q-card>
@@ -287,7 +287,7 @@
           </q-item>
           <q-item v-if="invitations.length === 0"><q-item-section>No invitations yet</q-item-section></q-item>
         </q-list>
-        <q-card-actions align="right"><q-btn flat label="Close" color="secondary" v-close-popup /></q-card-actions>
+        <q-card-actions align="right"><q-btn flat label="Close" color="black" v-close-popup /></q-card-actions>
       </q-card>
     </q-dialog>
 
@@ -321,7 +321,7 @@
 
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="secondary" v-close-popup />
+          <q-btn flat label="Cancel" color="black" v-close-popup />
           <q-btn flat label="Create" color="primary" @click="createChannel" />
         </q-card-actions>
       </q-card>
@@ -343,7 +343,7 @@
           />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="secondary" v-close-popup />
+          <q-btn flat label="Cancel" color="black" v-close-popup />
           <q-btn flat label="Add" color="primary" @click="addPeopleToChannel" />
         </q-card-actions>
       </q-card>

@@ -24,7 +24,7 @@ defineProps<{
 .avatar-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;  /* fills the avatar circle and crops edges */
-  border-radius: 50%; /* ensures circular shape */
+  object-fit: cover;  
+  border-radius: 50%;
 }
 </style>
