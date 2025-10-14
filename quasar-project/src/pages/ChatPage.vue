@@ -164,7 +164,20 @@
                         @click="deleteChannel"
                       >
                         <q-item-section class="text-negative">Delete channel</q-item-section>
-                   
+                      </q-item>
+                      <q-item v-if="activeChannel?.isAdmin">
+                        <q-item-section>
+                          <div class="row items-center justify-between">
+                            <span>Private</span>
+                            <q-toggle
+                              v-model="activeChannel.type"
+                              true-value="private"
+                              false-value="public"
+                              @update:model-value="toggleChannelType"
+                            />
+                          </div>
+                        </q-item-section>
+                      </q-item>
                     </q-list>
                   </q-menu>
                 </q-btn>
