@@ -1,90 +1,95 @@
 <template>
   <q-page class="flex flex-center bg-secondary">
     <q-card style="width: 400px;" flat bordered>
-      <q-form
-        @submit="register"
-        class="q-pa-md q-gutter-y-md"
-        style="width: 400px;"
-      >
-        <div class="block text-h6 q-mb-lg text-center"></div>
-        <div class="profile-wrapper column items-center q-mb-md">
-          <ProfilePicture
-            :avatar="uploadedAvatar"
-            size="80px"
-            bgColor="grey-4"
-          />
+        <q-form
+          @submit="register"
+          class="q-pa-md q-gutter-y-md"
+          style="width: 400px;"
+        >
+          <div class="block text-h6 q-mb-lg text-center"></div>
+          <div class="profile-wrapper column items-center q-mb-md">
+            <ProfilePicture
+              :avatar="uploadedAvatar"
+              size="80px"
+              bgColor="grey-4"
+            />
+
+            <q-btn
+              flat
+              color="primary"
+              class="q-mt-xs text-caption"
+              label="add profile picture"
+              @click="triggerFileInput"
+            />
+
+            <input
+              type="file"
+              ref="fileInput"
+              accept="image/*"
+              style="display: none"
+              @change="handleFileUpload"
+            />
+          </div>
+
+          <q-input v-model="firstName" label="Name*" outlined required dense maxlength="20" />
+          <q-input v-model="lastName" label="Surname*" outlined required dense maxlength="30"/>
+          <q-input v-model="nickName" label="NickName*" outlined required dense maxlength="20"/>
+          <q-input v-model="email" label="Email*" type="email" outlined required dense maxlength="30"/>
+
+          <q-input
+            v-model="password"
+            label="Password"
+            :type="isPwdVisible1 ? 'password' : 'text'"
+            outlined
+            required
+            dense
+            :rules="[
+                value => (value && value.length >= 8 && /\d/.test(value)) || 'Enter at least 8 characters, with at least one number'
+            ]"
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwdVisible1 ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwdVisible1 = !isPwdVisible1"
+              />
+            </template>
+          </q-input>
+
+          <q-input
+            v-model="passwordCheck"
+            label="Check password"
+            :type="isPwdVisible2 ? 'password' : 'text'"
+            outlined
+            required
+            dense
+            :error="passwordCheckError"
+            error-message="Passwords do not match"
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwdVisible2 ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwdVisible2 = !isPwdVisible2"
+              />
+            </template>
+          </q-input>
 
           <q-btn
-            flat
+            label="Register"
+            type="submit"
             color="primary"
-            class="q-mt-xs text-caption"
-            label="add profile picture"
-            @click="triggerFileInput"
+            class="full-width q-mt-md"
           />
-
-          <input
-            type="file"
-            ref="fileInput"
-            accept="image/*"
-            style="display: none"
-            @change="handleFileUpload"
-          />
-        </div>
-
-        <q-input v-model="firstName" label="Name*" outlined required dense maxlength="20" />
-        <q-input v-model="lastName" label="Surname*" outlined required dense maxlength="30"/>
-        <q-input v-model="nickName" label="NickName*" outlined required dense maxlength="20"/>
-        <q-input v-model="email" label="Email*" type="email" outlined required dense maxlength="30"/>
-
-        <q-input
-          v-model="password"
-          label="Password"
-          :type="isPwdVisible1 ? 'password' : 'text'"
-          outlined
-          required
-          dense
-          :rules="[
-              value => (value && value.length >= 8 && /\d/.test(value)) || 'Enter at least 8 characters, with at least one number'
-          ]"
-        >
-          <template v-slot:append>
-            <q-icon
-              :name="isPwdVisible1 ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
-              @click="isPwdVisible1 = !isPwdVisible1"
-            />
-          </template>
-        </q-input>
-
-        <q-input
-          v-model="passwordCheck"
-          label="Check password"
-          :type="isPwdVisible2 ? 'password' : 'text'"
-          outlined
-          required
-          dense
-          :error="passwordCheckError"
-          error-message="Passwords do not match"
-        >
-          <template v-slot:append>
-            <q-icon
-              :name="isPwdVisible2 ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
-              @click="isPwdVisible2 = !isPwdVisible2"
-            />
-          </template>
-        </q-input>
-
-        <q-btn
-          label="Register"
-          type="submit"
-          color="primary"
-          class="full-width q-mt-md"
-        />
-      </q-form>
+          <div class="q-mt-md text-center">
+            <span>Already have an account? </span>
+            <q-btn flat color="primary" @click="haveLogin">Sign in</q-btn>
+          </div>
+        </q-form>
     </q-card>
   </q-page>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
@@ -98,6 +103,11 @@ const password = ref('');
 const passwordCheck = ref('');
 const isPwdVisible1 = ref(true);
 const isPwdVisible2 = ref(true);
+
+const haveLogin = () => {
+  void router.push('/login')
+};
+
 
 const router = useRouter();
 
