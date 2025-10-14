@@ -488,10 +488,18 @@ const createChannel = () => {
   const name = newChannelName.value.trim();
   if (!name) return;
 
+  // kontrola ci uz meno existuje
+  const nameExists = channels.value.some(ch => ch.name.toLowerCase() === name.toLowerCase());
+  if (nameExists) {
+    // musi mat unikatne meno
+    alert('Channel name already exists!');
+    return;
+  }
+
   const newCh: Channel = {
     id: channels.value.length + 1,
     name,
-    type: newChannelType.value,   // ➕ tu sa uloží public/private
+    type: newChannelType.value,
     messages: [],
     members: selectedFriends.value,
     isAdmin: true,
@@ -500,12 +508,12 @@ const createChannel = () => {
   channels.value.unshift(newCh);
   activeChannel.value = newCh;
 
+  // reset hodnot
   newChannelName.value = '';
   selectedFriends.value = [];
-  newChannelType.value = 'public';  // reset
+  newChannelType.value = 'public';
   showCreateChannelDialog.value = false;
 };
-
 
 const leaveChannel = () => {
   if (!activeChannel.value) return;
