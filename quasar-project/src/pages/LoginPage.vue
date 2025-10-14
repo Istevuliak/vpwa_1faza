@@ -75,7 +75,6 @@ const router = useRouter();
 
 const login = () => {
   // tu sa vola API potom
-  alert(`Logged in: ${email.value}`);
   void router.push('/chat'); // presmerovanie po prihlaseni, toto este nemame, treba spravit ChatPAge.vue
 };
 

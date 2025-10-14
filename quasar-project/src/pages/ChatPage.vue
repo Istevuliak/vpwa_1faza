@@ -2,8 +2,24 @@
   <q-page class="row no-wrap bg-grey-1">
     <!-- Sidebar na lavo -->
     <div class="column items-center bg-grey-3 q-pa-md" style="width: 100px;">
-      <q-btn flat round icon="chat" color="primary" class="q-mb-md" title="Chats" />
-      <q-btn flat round icon="groups" color="primary" class="q-mb-md" title="Channels" />
+      <q-btn
+        flat
+        round
+        icon="chat"
+        :color="showFriends ? 'black' : 'primary'"
+        class="q-mb-md"
+        title="Chats"
+        @click="toggleFriends"
+      />
+      <q-btn
+        flat
+        round
+        icon="groups"
+        :color="showChannels ? 'black' : 'primary'"
+        class="q-mb-md"
+        title="Channels"
+        @click="toggleChannels"
+      />
 
       <!-- Invitations -->
       <div class="relative-position q-mb-md">
@@ -15,11 +31,11 @@
     <!-- Hlavna cast chatu -->
     <div class="column col bg-white">
       <!-- freinds aby to nebolo take prazdne, na zvazenie ci to potrebujeme a chceme mat -->
-      <div class="row items-center justify-start q-pa-md q-gutter-md bg-grey-2">
+      <div class="row justify-start items-center q-pa-md bg-grey-2">
         <div
           v-for="friend in friends"
           :key="friend.id"
-          class="column items-center cursor-pointer"
+          class="column items-center cursor-pointer q-mr-md"
           style="width: 60px;"
           @click="openFriendChat(friend)"
         >
@@ -44,7 +60,7 @@
       <!-- hlavna chatova cast -->
       <div class="row col">
         <!-- channels zoznams -->
-        <div class="col-3 bg-grey-3 q-pa-sm">
+        <div v-if="showChannels" class="col-3 bg-grey-3 q-pa-sm" style="width: 250px; flex-shrink: 0;">
           <q-list bordered>
             <q-item-label header>Channels</q-item-label>
             <q-item
@@ -66,8 +82,39 @@
           </q-list>
         </div>
 
+        <!-- friends zoznam -->
+        <div v-if="showFriends" class="col-3 bg-grey-3 q-pa-sm" style="width: 250px; flex-shrink: 0;">
+          <q-list bordered>
+            <q-item-label header>Friends</q-item-label>
+            <q-item
+              v-for="friend in friends"
+              :key="friend.id"
+              clickable
+              @click="openFriendChat(friend)"
+              :active="activeFriend?.id === friend.id"
+              active-class="bg-primary text-white"
+            >
+              <ProfilePicture
+                :avatar="friend.avatar"
+                size="50px"
+                bgColor="grey-3"
+                class="q-mr-sm"
+              />
+              <q-item-section>{{ friend.name }}</q-item-section>
+            </q-item>
+
+            <q-item clickable @click="showAddFriendDialog = true">
+              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
+              <q-item-section>Add friends</q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+
         <!-- chatting -->
-        <div class="col-9 column relative-position">
+        <div
+          class="column relative-position"
+          style="flex: 1;"
+        >
 
         <!-- obsah chatu -->
         <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
@@ -102,6 +149,19 @@
                 </q-menu>
                 </q-btn>
             </div>
+            <div v-if="activeFriend">
+                <q-btn flat round dense icon="more_vert">
+                <q-menu>
+                    <q-list style="min-width: 150px;">
+                    <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
+                        <q-item-section class="text-negative" clickable v-close-popup @click="removeFriend(activeFriend.id)"
+                        >Remove friend
+                        </q-item-section>
+                    </q-item>
+                    </q-list>
+                </q-menu>
+                </q-btn>
+            </div>
             </div>
 
             <q-separator />
@@ -115,7 +175,7 @@
         </div>
 
         <!-- ak nič nie je vybrané -->
-        <div v-else class="flex flex-center col text-grey" style="flex: 1;">
+        <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
             <div>Select a channel or friend to start chatting</div>
         </div>
 
@@ -265,6 +325,8 @@
   </q-page>
 </template>
 
+
+
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import ProfilePicture from '../components/ProfilePicture.vue';
@@ -273,6 +335,20 @@ interface Friend { id: number; name: string; avatar: string; messages?: Message[
 interface Message { id: number; user: string; text: string; }
 interface Channel { id: number; name: string; messages: Message[]; members?: number[]; isAdmin?: boolean; }
 interface Invitation { id: number; from: string; channel: string; }
+
+//zobrazenie channel listu
+const showChannels = ref(true); // defaultne true
+const toggleChannels = () => {
+  showChannels.value = !showChannels.value;
+  if (showChannels.value) showFriends.value = false;
+};
+
+// ukazanie friends listu
+const showFriends = ref(false);
+const toggleFriends = () => {
+  showFriends.value = !showFriends.value;
+  if (showFriends.value) showChannels.value = false;
+};
 
 const friends = ref<Friend[]>([
     // zmenit im profilovky to je strasne
@@ -301,20 +377,52 @@ const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
-const selectChannel = (ch: Channel) => { activeFriend.value = null; activeChannel.value = ch; };
-const openFriendChat = (f: Friend) => { activeChannel.value = null; activeFriend.value = f; };
+const selectChannel = (ch: Channel) => {
+  if (activeChannel.value?.id === ch.id) {
+    activeChannel.value = null;  // zrušíme výber, zobrazí sa placeholder
+  } else {
+    activeFriend.value = null;
+    activeChannel.value = ch;
+  }
+};
+
+const openFriendChat = (f: Friend) => {
+if (activeFriend.value?.id === f.id) {
+    activeFriend.value = null;   // zrušíme výber, zobrazí sa placeholder
+  } else {
+    activeChannel.value = null;
+    activeFriend.value = f;
+  }
+};
 
 const addFriend = () => {
   const name = newFriendName.value.trim();
   if (!name) return;
-  friends.value.push({ id: friends.value.length + 1, name, avatar: 'https://cdn.quasar.dev/img/avatar.png', messages: [] });
+  const newFr: Friend = {
+    id: friends.value.length + 1,
+    name,
+    avatar: 'https://cdn.quasar.dev/img/avatar.png',
+    messages: [],
+  };
+  friends.value.unshift(newFr);
+  activeFriend.value = newFr;
   newFriendName.value = ''; showAddFriendDialog.value = false;
+};
+const removeFriend = (id: number) => {
+  friends.value = friends.value.filter(f => f.id !== id);
+  if (activeFriend.value?.id === id) activeFriend.value = null;
 };
 
 const openInvitations = () => (showInvitationsDialog.value = true);
 const acceptInvite = (id: number) => {
   const inv = invitations.value.find(i => i.id === id);
-  if (inv) channels.value.push({ id: channels.value.length + 1, name: inv.channel, messages: [] });
+  const newCh: Channel = {
+    id: channels.value.length + 1,
+    name: inv?.channel || 'New Channel',
+    messages: [],
+  };
+  if (inv) channels.value.unshift(newCh);
+  activeChannel.value = newCh;
   invitations.value = invitations.value.filter(i => i.id !== id);
 };
 const declineInvite = (id: number) => (invitations.value = invitations.value.filter(i => i.id !== id));
@@ -329,7 +437,7 @@ const createChannel = () => {
     members: selectedFriends.value,
     isAdmin: true,
   };
-  channels.value.push(newCh);
+  channels.value.unshift(newCh);
   activeChannel.value = newCh;
   newChannelName.value = '';
   selectedFriends.value = [];
