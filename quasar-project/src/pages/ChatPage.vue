@@ -149,6 +149,19 @@
                 </q-menu>
                 </q-btn>
             </div>
+            <div v-if="activeFriend">
+                <q-btn flat round dense icon="more_vert">
+                <q-menu>
+                    <q-list style="min-width: 150px;">
+                    <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
+                        <q-item-section class="text-negative" clickable v-close-popup @click="removeFriend(activeFriend.id)"
+                        >Remove friend
+                        </q-item-section>
+                    </q-item>
+                    </q-list>
+                </q-menu>
+                </q-btn>
+            </div>
             </div>
 
             <q-separator />
@@ -162,7 +175,7 @@
         </div>
 
         <!-- ak nič nie je vybrané -->
-        <div v-else class="flex flex-center col text-grey" style="flex: 1;">
+        <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
             <div>Select a channel or friend to start chatting</div>
         </div>
 
@@ -312,6 +325,8 @@
   </q-page>
 </template>
 
+
+
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import ProfilePicture from '../components/ProfilePicture.vue';
@@ -362,20 +377,52 @@ const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
-const selectChannel = (ch: Channel) => { activeFriend.value = null; activeChannel.value = ch; };
-const openFriendChat = (f: Friend) => { activeChannel.value = null; activeFriend.value = f; };
+const selectChannel = (ch: Channel) => {
+  if (activeChannel.value?.id === ch.id) {
+    activeChannel.value = null;  // zrušíme výber, zobrazí sa placeholder
+  } else {
+    activeFriend.value = null;
+    activeChannel.value = ch;
+  }
+};
+
+const openFriendChat = (f: Friend) => {
+if (activeFriend.value?.id === f.id) {
+    activeFriend.value = null;   // zrušíme výber, zobrazí sa placeholder
+  } else {
+    activeChannel.value = null;
+    activeFriend.value = f;
+  }
+};
 
 const addFriend = () => {
   const name = newFriendName.value.trim();
   if (!name) return;
-  friends.value.push({ id: friends.value.length + 1, name, avatar: 'https://cdn.quasar.dev/img/avatar.png', messages: [] });
+  const newFr: Friend = {
+    id: friends.value.length + 1,
+    name,
+    avatar: 'https://cdn.quasar.dev/img/avatar.png',
+    messages: [],
+  };
+  friends.value.unshift(newFr);
+  activeFriend.value = newFr;
   newFriendName.value = ''; showAddFriendDialog.value = false;
+};
+const removeFriend = (id: number) => {
+  friends.value = friends.value.filter(f => f.id !== id);
+  if (activeFriend.value?.id === id) activeFriend.value = null;
 };
 
 const openInvitations = () => (showInvitationsDialog.value = true);
 const acceptInvite = (id: number) => {
   const inv = invitations.value.find(i => i.id === id);
-  if (inv) channels.value.push({ id: channels.value.length + 1, name: inv.channel, messages: [] });
+  const newCh: Channel = {
+    id: channels.value.length + 1,
+    name: inv?.channel || 'New Channel',
+    messages: [],
+  };
+  if (inv) channels.value.unshift(newCh);
+  activeChannel.value = newCh;
   invitations.value = invitations.value.filter(i => i.id !== id);
 };
 const declineInvite = (id: number) => (invitations.value = invitations.value.filter(i => i.id !== id));
@@ -390,7 +437,7 @@ const createChannel = () => {
     members: selectedFriends.value,
     isAdmin: true,
   };
-  channels.value.push(newCh);
+  channels.value.unshift(newCh);
   activeChannel.value = newCh;
   newChannelName.value = '';
   selectedFriends.value = [];
