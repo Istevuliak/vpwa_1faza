@@ -561,13 +561,50 @@ function sendMessage() {
   const text = newMessage.value.trim();
   if (!text) return;
 
-  // Ak správa začína "/", ide do CLI (ako príkaz)
   if (text.startsWith("/")) {
-    messages.value.push(text);
-  } else if (activeFriend.value || activeChannel.value) {
-    // Získame správny cieľ (friend alebo channel)
-    const target = activeFriend.value ?? activeChannel.value;
+    const parts = text.slice(1).split(" ");
+    const command = parts[0]?.toLowerCase() ?? "";
 
+    if (command === "join") {
+      const channelName = parts[1]?.trim();
+      const type = parts[2]?.toLowerCase() === "private" ? "private" : "public";
+
+      if (!channelName) {
+        messages.value.push("Usage: /join channelName [private]");
+      } else {
+        // Skontrolujeme, či channel existuje
+        const ch = channels.value.find(c => c.name.toLowerCase() === channelName.toLowerCase());
+
+        if (ch) {
+          // Ak je private a user nie je člen → error
+          if (ch.type === "private" && (!ch.members || !ch.members.includes(0))) { // 0 = aktuálny používateľ (príklad)
+            messages.value.push(`Cannot join private channel "${channelName}"`);
+          } else {
+            activeChannel.value = ch;
+            messages.value.push(`Joined channel "${ch.name}"`);
+          }
+        } else {
+          // Channel neexistuje → vytvoríme ho
+          const newCh: Channel = {
+            id: channels.value.length + 1,
+            name: channelName,
+            type: type,
+            messages: [],
+            members: [0], // pridáme aktuálneho používateľa
+            isAdmin: true,
+          };
+          channels.value.unshift(newCh);
+          activeChannel.value = newCh;
+          messages.value.push(`Channel "${channelName}" created (${type})`);
+        }
+      }
+    } else {
+      // ostatné CLI príkazy
+      messages.value.push(text);
+    }
+  } else if (activeFriend.value || activeChannel.value) {
+    // správa do chatov
+    const target = activeFriend.value ?? activeChannel.value;
     if (target?.messages) {
       target.messages.push({
         id: Date.now(),
@@ -576,19 +613,19 @@ function sendMessage() {
       });
     }
   } else {
-    // Ak nič nie je otvorené, fallback do CLI
+    // fallback CLI
     messages.value.push(text);
   }
 
   newMessage.value = "";
 
-  // Scroll CLI iba ak išlo do histórie
   void nextTick(() => {
     if (text.startsWith("/") && historyBox.value) {
       historyBox.value.scrollTop = historyBox.value.scrollHeight;
     }
   });
 }
+
 </script>
 
 <style scoped>
