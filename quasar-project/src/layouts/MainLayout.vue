@@ -3,7 +3,6 @@
     <!-- HEADER -->
     <q-header elevated>
       <q-toolbar>
-
         <!-- alebo este CLIck je pekny nazov na command line -->
         <q-toolbar-title class="text-left">
           Shello
@@ -12,15 +11,18 @@
         <!-- Ikony vpravo -->
         <div v-if="isChatPage" class="row items-center q-gutter-sm">
           <!-- Ikona používateľa (otvára pravé menu) -->
-          <q-btn
-            flat
-            dense
-            round
-            aria-label="User"
-            @click="toggleRightDrawer"
-          >
-            <q-icon class="material-symbols-outlined">account_circle</q-icon>
-          </q-btn>
+          <div class="relative-position">
+            <q-btn
+              flat
+              dense
+              round
+              aria-label="User"
+              @click="toggleRightDrawer"
+            >
+              <q-icon class="material-symbols-outlined">account_circle</q-icon>
+            </q-btn>
+            <q-badge color="red" floating transparent>{{ notifications.length }}</q-badge>
+          </div>
 
           <!-- Log out -->
           <q-btn color="dark" flat>
@@ -40,7 +42,6 @@
               </q-card>
             </q-menu>
           </q-btn>
-
         </div>
       </q-toolbar>
     </q-header>
@@ -61,6 +62,22 @@
           :key="link.title"
           v-bind="link"
         />
+        <q-item v-if="notifications.length > 0">
+          <q-item-section>
+            <div class="notification-message">
+              {{ notifications[0]?.message }}
+              <q-btn
+                flat
+                dense
+                round
+                icon="close"
+                size="sm"
+                @click="dismissNotification"
+                class="q-ml-sm"
+              />
+            </div>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
@@ -75,12 +92,23 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink.vue';
+
 // zistenie kde sa nachadzame
 import { useRoute } from 'vue-router';
 const route = useRoute();
 const isChatPage = computed(() => route.path === '/chat'); 
 
 const router = useRouter();
+
+// Definícia rozhrania pre notifikácie
+interface Notification {
+  message: string;
+}
+
+// Definícia notifikácií
+const notifications = ref<Notification[]>([
+  { message: 'Tento channel bol neaktívny 30 dní, rušíme ho' },
+]);
 
 const linksList: EssentialLinkProps[] = [
   { title: 'Profile', caption: 'User details', icon: 'person', link: '#' },
@@ -89,15 +117,17 @@ const linksList: EssentialLinkProps[] = [
 ];
 
 const rightDrawerOpen = ref(false);
-
-// logout overlay
 const showLogoutMenu = ref(false);
+
+// Funkcia na zatvorenie notifikácie
+function dismissNotification() {
+  notifications.value.shift(); // Odstráni prvú notifikáciu
+}
 
 async function confirmLogout() {
   showLogoutMenu.value = false;
   await router.push('/login');
 }
-
 
 function toggleRightDrawer() {
   rightDrawerOpen.value = !rightDrawerOpen.value;
@@ -112,5 +142,19 @@ function toggleRightDrawer() {
 
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+}
+
+.q-toolbar {
+  color: #000; /* Čierny text pre lepší kontrast */
+}
+
+.notification-message {
+  background-color: #F44336; /* Červené pozadie */
+  color: #000; /* Čierny text */
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

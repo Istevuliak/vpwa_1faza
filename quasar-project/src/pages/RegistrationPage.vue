@@ -79,7 +79,7 @@
             label="Register"
             type="submit"
             color="primary"
-            class="full-width q-mt-md"
+            class="full-width q-mt-md bg-yellow-8"
           />
           <div class="q-mt-md text-center">
             <span>Already have an account? </span>

@@ -50,7 +50,7 @@
             type="submit"
             label="Log in"
             color="primary"
-            class="full-width"
+            class="full-width bg-yellow-8"
           />
         </q-form>
 
@@ -93,7 +93,7 @@ const onForgotPassword = () => {
 }
 
 .forgot-link {
-  color: var(--q-primary); /* používa primary farbu z Quasar témy */
+  color: var(--q-primary); 
   cursor: pointer;
   text-decoration: underline;
   font-size: 14px;
