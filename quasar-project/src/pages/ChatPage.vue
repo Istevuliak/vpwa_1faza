@@ -47,7 +47,6 @@
           <div class="text-caption ellipsis">{{ friend.name }}</div>
         </div>
 
-
         <!-- Add friend tlačidlo -->
         <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
           <q-avatar size="50px" color="grey-4" text-color="black">
@@ -116,114 +115,116 @@
           style="flex: 1;"
         >
 
-        <!-- obsah chatu -->
-        <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
+          <!-- obsah chatu -->
+          <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
             <div class="q-pa-md row items-center justify-between">
-            <div class="text-h6">
+              <div class="text-h6">
                 {{ activeFriend ? activeFriend.name : activeChannel?.name }}
-            </div>
+              </div>
 
-            <!-- menu: only if channel -->
-            <div v-if="activeChannel">
+              <!-- menu: only if channel -->
+              <div v-if="activeChannel">
                 <q-btn flat round dense icon="more_vert">
-                <q-menu>
+                  <q-menu>
                     <q-list style="min-width: 150px;">
-                    <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
+                      <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
                         <q-item-section>Add people</q-item-section>
-                    </q-item>
-                    <q-item clickable v-close-popup @click="showRemovePeopleDialog = true">
+                      </q-item>
+                      <q-item clickable v-close-popup @click="showRemovePeopleDialog = true">
                         <q-item-section>Remove people</q-item-section>
-                    </q-item>
-                    <q-item clickable v-close-popup @click="leaveChannel">
+                      </q-item>
+                      <q-item clickable v-close-popup @click="leaveChannel">
                         <q-item-section>Leave channel</q-item-section>
-                    </q-item>
-                    <q-item
+                      </q-item>
+                      <q-item
                         clickable
                         v-close-popup
                         v-if="activeChannel?.isAdmin"
                         @click="deleteChannel"
-                    >
+                      >
                         <q-item-section class="text-negative">Delete channel</q-item-section>
-                    </q-item>
+                      </q-item>
                     </q-list>
-                </q-menu>
+                  </q-menu>
                 </q-btn>
-            </div>
-            <div v-if="activeFriend">
+              </div>
+              <div v-if="activeFriend">
                 <q-btn flat round dense icon="more_vert">
-                <q-menu>
+                  <q-menu>
                     <q-list style="min-width: 150px;">
-                    <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
-                        <q-item-section class="text-negative" clickable v-close-popup @click="removeFriend(activeFriend.id)"
-                        >Remove friend
+                      <q-item clickable v-close-popup @click="showAddPeopleDialog = true">
+                        <q-item-section class="text-negative" clickable v-close-popup @click="removeFriend(activeFriend.id)">
+                          Remove friend
                         </q-item-section>
-                    </q-item>
+                      </q-item>
                     </q-list>
-                </q-menu>
+                  </q-menu>
                 </q-btn>
-            </div>
+              </div>
             </div>
 
             <q-separator />
 
             <!-- správy -->
             <div class="col scroll q-pa-md" style="flex: 1; overflow-y: auto;">
-            <div v-for="msg in currentMessages" :key="msg.id" class="q-mb-sm">
+              <div
+                v-for="msg in currentMessages"
+                :key="msg.id"
+                class="q-mb-sm message-container"
+                :class="{ 'mention-message': msg.text.startsWith('@') }"
+              >
                 <b>{{ msg.user }}:</b> {{ msg.text }}
+              </div>
             </div>
-            </div>
-        </div>
+          </div>
 
-        <!-- ak nič nie je vybrané -->
-        <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
+          <!-- ak nič nie je vybrané -->
+          <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
             <div>Select a channel or friend to start chatting</div>
-        </div>
+          </div>
 
-        <!-- fixný spodný riadok na odoslanie -->
+          <!-- fixný spodný riadok na odoslanie -->
         <div
           class="column bg-grey-2"
           style="position: sticky; bottom: 0; border-top: 1px solid #444;"
         >
-          <!-- História správ -->
-          <div
-            ref="historyBox"
-            class="message-history"
-            style="
-              max-height: 150px;
-              overflow-y: auto;
-              padding: 6px 12px;
-              font-family: monospace;
-              font-size: 14px;
-              color: #222;
-            "
-          >
-            <div v-for="(msg, index) in messages" :key="index">
-              {{ msg }}
+            <!-- História správ -->
+            <div
+              ref="historyBox"
+              class="message-history"
+              style="
+                max-height: 150px;
+                overflow-y: auto;
+                padding: 6px 12px;
+                font-family: monospace;
+                font-size: 14px;
+                color: #222;
+              "
+            >
+              <div v-for="(msg, index) in messages" :key="index">
+                {{ msg }}
+              </div>
             </div>
+
+            <!-- Command line input -->
+            <q-input
+              ref="cliInput"
+              v-model="newMessage"
+              type="textarea"
+              borderless
+              autogrow
+              input-class="command-input"
+              input-style="padding-left: 12px;"
+              :placeholder="showPlaceholder ? 'Enter a message' : ''"
+              @focus="showPlaceholder = false"
+              @blur="showPlaceholder = true"
+              @keyup.enter.exact.prevent="sendMessage"
+              @keyup.enter.shift.stop
+            />
+
+
           </div>
-
-          <!-- Command line input -->
-          <q-input
-            ref="cliInput"
-            v-model="newMessage"
-            type="textarea"
-            borderless
-            autogrow
-            input-class="command-input"
-            input-style="padding-left: 12px;"
-            :placeholder="showPlaceholder ? 'Enter a message' : ''"
-            @focus="showPlaceholder = false"
-            @blur="showPlaceholder = true"
-            @keyup.enter.exact.prevent="sendMessage"
-            @keyup.enter.shift.stop
-          />
-
-
         </div>
-
-
-        </div>
-
       </div>
     </div>
 
@@ -321,11 +322,9 @@
           <q-btn flat label="Remove" color="negative" @click="removePeopleFromChannel" />
         </q-card-actions>
       </q-card>
-    </q-dialog>
-  </q-page>
+      </q-dialog>
+    </q-page>
 </template>
-
-
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
@@ -387,7 +386,7 @@ const selectChannel = (ch: Channel) => {
 };
 
 const openFriendChat = (f: Friend) => {
-if (activeFriend.value?.id === f.id) {
+  if (activeFriend.value?.id === f.id) {
     activeFriend.value = null;   // zrušíme výber, zobrazí sa placeholder
   } else {
     activeChannel.value = null;
@@ -467,9 +466,9 @@ const addPeopleToChannel = () => {
 };
 const removePeopleFromChannel = () => {
   if (!activeChannel.value) return;
-    activeChannel.value.members = (activeChannel.value.members ?? []).filter(
+  activeChannel.value.members = (activeChannel.value.members ?? []).filter(
     id => !selectedFriends.value.includes(id)
-    );
+  );
   showRemovePeopleDialog.value = false;
   selectedFriends.value = [];
 };
@@ -521,5 +520,12 @@ function sendMessage() {
   font-family: monospace;
   max-height: 150px; 
   overflow-y: auto;
+}
+.message-container {
+  padding: 8px;
+  border-radius: 4px;
+}
+.mention-message {
+  background-color: #ffe6e6; /* Svetloružové pozadie pre správy začínajúce na @ */
 }
 </style>
