@@ -62,9 +62,30 @@
         <!-- channels zoznams -->
         <div v-if="showChannels" class="col-3 bg-grey-3 q-pa-sm" style="width: 250px; flex-shrink: 0;">
           <q-list bordered>
-            <q-item-label header>Channels</q-item-label>
+            <q-item-label header>
+              <div class="row items-center">
+                <span>Channels</span>
+                <q-space />
+                <q-btn flat round dense icon="more_vert">
+                  <q-menu>
+                    <q-list style="min-width: 150px;">
+                      <q-item clickable v-close-popup @click="channelFilter = 'all'">
+                        <q-item-section>All channels</q-item-section>
+                      </q-item>
+                      <q-item clickable v-close-popup @click="channelFilter = 'public'">
+                        <q-item-section>Public channels</q-item-section>
+                      </q-item>
+                      <q-item clickable v-close-popup @click="channelFilter = 'private'">
+                        <q-item-section>Private channels</q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </q-btn>
+              </div>
+            </q-item-label>
+
             <q-item
-              v-for="channel in channels"
+              v-for="channel in filteredChannels"
               :key="channel.id"
               clickable
               @click="selectChannel(channel)"
@@ -145,6 +166,21 @@
                     >
                         <q-item-section class="text-negative">Delete channel</q-item-section>
                     </q-item>
+                    <q-item v-if="activeChannel?.isAdmin">
+                    <q-item-section>
+                      <div class="row items-center justify-between">
+                        <span>Private</span>
+                        <q-toggle
+                          v-model="activeChannel.type"
+                          true-value="private"
+                          false-value="public"
+                          @update:model-value="toggleChannelType"
+                        />
+                      </div>
+                    </q-item-section>
+                  </q-item>
+
+
                     </q-list>
                 </q-menu>
                 </q-btn>
@@ -272,6 +308,18 @@
             use-chips
             class="q-mt-md"
           />
+          <q-select
+            v-model="newChannelType"
+            :options="[
+              { label: 'Public', value: 'public' },
+              { label: 'Private', value: 'private' }
+            ]"
+            label="Channel type"
+            outlined
+            dense
+            class="q-mt-md"
+          />
+
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="secondary" v-close-popup />
@@ -333,7 +381,7 @@ import ProfilePicture from '../components/ProfilePicture.vue';
 
 interface Friend { id: number; name: string; avatar: string; messages?: Message[]; }
 interface Message { id: number; user: string; text: string; }
-interface Channel { id: number; name: string; messages: Message[]; members?: number[]; isAdmin?: boolean; }
+interface Channel { id: number; name: string; type: 'public' | 'private'; messages: Message[]; members?: number[]; isAdmin?: boolean; }
 interface Invitation { id: number; from: string; channel: string; }
 
 //zobrazenie channel listu
@@ -357,10 +405,13 @@ const friends = ref<Friend[]>([
   { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', messages: [] },
   { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', messages: [] },
 ]);
+
+const newChannelType = ref<'public' | 'private'>('public');
 const channels = ref<Channel[]>([
-  { id: 1, name: 'General', messages: [], members: [1, 2, 3], isAdmin: true },
-  { id: 2, name: 'UniLife', messages: [], members: [2, 3] },
+  { id: 1, name: 'General', type: 'public', messages: [], members: [1, 2, 3], isAdmin: true },
+  { id: 2, name: 'UniLife', type: 'private', messages: [], members: [2, 3] },
 ]);
+
 const invitations = ref<Invitation[]>([{ id: 1, from: 'Tomas', channel: 'Developers' }]);
 
 const activeChannel = ref<Channel | null>(null);
@@ -419,6 +470,7 @@ const acceptInvite = (id: number) => {
   const newCh: Channel = {
     id: channels.value.length + 1,
     name: inv?.channel || 'New Channel',
+    type: 'private', 
     messages: [],
   };
   if (inv) channels.value.unshift(newCh);
@@ -427,22 +479,36 @@ const acceptInvite = (id: number) => {
 };
 const declineInvite = (id: number) => (invitations.value = invitations.value.filter(i => i.id !== id));
 
+const channelFilter = ref<'all' | 'public' | 'private'>('all');
+
+const filteredChannels = computed(() => {
+  if (channelFilter.value === 'all') return channels.value;
+  return channels.value.filter(ch => ch.type === channelFilter.value);
+});
+
+
 const createChannel = () => {
   const name = newChannelName.value.trim();
   if (!name) return;
+
   const newCh: Channel = {
     id: channels.value.length + 1,
     name,
+    type: newChannelType.value,   // ➕ tu sa uloží public/private
     messages: [],
     members: selectedFriends.value,
     isAdmin: true,
   };
+
   channels.value.unshift(newCh);
   activeChannel.value = newCh;
+
   newChannelName.value = '';
   selectedFriends.value = [];
+  newChannelType.value = 'public';  // reset
   showCreateChannelDialog.value = false;
 };
+
 
 const leaveChannel = () => {
   if (!activeChannel.value) return;
@@ -473,6 +539,12 @@ const removePeopleFromChannel = () => {
   showRemovePeopleDialog.value = false;
   selectedFriends.value = [];
 };
+const toggleChannelType = (val: 'public' | 'private') => {
+  if (!activeChannel.value) return
+  activeChannel.value.type = val
+}
+
+
 
 // CLI fixne
 const historyBox = ref<HTMLElement | null>(null);
