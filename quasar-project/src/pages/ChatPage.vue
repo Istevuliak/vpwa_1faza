@@ -487,6 +487,13 @@ const openFriendChat = (f: Friend) => {
 const addFriend = () => {
   const name = newFriendName.value.trim();
   if (!name) return;
+  const nicknameExists = friends.value.some(f => f.name.toLowerCase() === name.toLowerCase());
+  if (nicknameExists) {
+    // musi mat unikatne meno
+    alert('You are already friends with this person!');
+    return;
+  }
+
   const newFr: Friend = {
     id: friends.value.length + 1,
     name,
