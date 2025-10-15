@@ -138,7 +138,7 @@
         <!-- chatting -->
         <div class="column relative-position" style="flex: 1;">
           <!-- obsah chatu -->
-          <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
+          <div v-if="activeChannel || activeFriend" class="column" style="flex: 1; overflow: hidden;">
             <div class="q-pa-md row items-center justify-between">
               <div class="text-h6">
                 {{ activeFriend ? activeFriend.name : activeChannel?.name }}
@@ -199,7 +199,16 @@
             <q-separator />
 
             <!-- správy -->
-            <div class="col scroll q-pa-md" style="flex: 1; overflow-y: auto;">
+              <div
+                ref="chatScrollBox"
+                class="q-pa-md"
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  display: flex;
+                  flex-direction: column;
+                  max-height: 64vh;
+                ">
               <div
                 v-for="msg in currentMessages"
                 :key="msg.id"
@@ -221,7 +230,7 @@
             class="column bg-grey-2"
             style="position: sticky; bottom: 0; border-top: 1px solid #444;"
           >
-            <!-- História správ -->
+            <!-- alerty nad inputom-->
             <div
               ref="alertBox"
               class="system-message"
@@ -487,6 +496,13 @@ const openFriendChat = (f: Friend) => {
 const addFriend = () => {
   const name = newFriendName.value.trim();
   if (!name) return;
+  const nicknameExists = friends.value.some(f => f.name.toLowerCase() === name.toLowerCase());
+  if (nicknameExists) {
+    // musi mat unikatne meno
+    alert('You are already friends with this person!');
+    return;
+  }
+
   const newFr: Friend = {
     id: friends.value.length + 1,
     name,
@@ -604,9 +620,9 @@ const saveUserStatus = () => {
 };
 
 // CLI fixne
-const historyBox = ref<HTMLElement | null>(null);
 const newMessage = ref("");
 const systemMessage = ref("");
+const chatScrollBox = ref<HTMLElement | null>(null);
 
 function sendMessage() {
   const text = newMessage.value.trim();
@@ -618,30 +634,21 @@ function sendMessage() {
 
     if (command === "join") {
       const channelName = parts[1]?.trim();
-      const type = parts[2]?.toLowerCase() === "private" ? "private" : "public";
+      let type: 'public' | 'private' = 'public';
+      const rest = parts.slice(2).join(' ').toLowerCase();
+      if (rest.includes('private')) type = 'private';
 
       if (!channelName) {
         systemMessage.value = "Usage: /join channelName [private]";
       } else {
-        // Skontrolujeme, či channel existuje
         const ch = channels.value.find(c => c.name.toLowerCase() === channelName.toLowerCase());
-
-        if (ch) {
-          // Ak je private a user nie je člen → error
-          if (ch.type === "private" && (!ch.members || !ch.members.includes(0))) { // 0 = aktuálny používateľ (príklad)
-            systemMessage.value = `Cannot join private channel "${channelName}"`;
-          } else {
-            activeChannel.value = ch;
-            systemMessage.value = `Joined channel "${ch.name}"`;
-          }
-        } else {
-          // Channel neexistuje → vytvoríme ho
+        if (!ch) {
           const newCh: Channel = {
             id: channels.value.length + 1,
             name: channelName,
-            type: type,
+            type,
             messages: [],
-            members: [0], // pridáme aktuálneho používateľa
+            members: [0],
             isAdmin: true,
           };
           channels.value.unshift(newCh);
@@ -663,6 +670,12 @@ function sendMessage() {
         text
       });
     }
+    void nextTick(() => {
+      if (chatScrollBox.value) {
+        chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
+      }
+    });
+
   } else if (!activeFriend.value && !activeChannel.value) {
     systemMessage.value = "You are outside of channel";
   } else {
@@ -671,12 +684,6 @@ function sendMessage() {
   }
 
   newMessage.value = "";
-
-  void nextTick(() => {
-    if (text.startsWith("/") && historyBox.value) {
-      historyBox.value.scrollTop = historyBox.value.scrollHeight;
-    }
-  });
 }
 
 </script>
