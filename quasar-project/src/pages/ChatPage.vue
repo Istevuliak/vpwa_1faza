@@ -204,7 +204,7 @@
                 v-for="msg in currentMessages"
                 :key="msg.id"
                 class="q-mb-sm message-container"
-                :class="{ 'mention-message': msg.text.startsWith('@') }"
+                :class="{ 'mention-message': msg.text.includes('@') }"
               >
                 <b>{{ msg.user }}:</b> {{ msg.text }}
               </div>
@@ -691,7 +691,7 @@ function sendMessage() {
   border-radius: 4px;
 }
 .mention-message {
-  background-color: #ffe6e6; /* Svetloružové pozadie pre správy začínajúce na @ */
+  background-color: #9bc3ff; 
 }
 
 /* Status indicators */
@@ -707,14 +707,14 @@ function sendMessage() {
 }
 
 .status-online {
-  background-color: #4CAF50; /* Zelená pre online */
+  background-color: #4CAF50;
 }
 
 .status-dnd {
-  background-color: #F44336; /* Červená pre DND */
+  background-color: #F44336; 
 }
 
 .status-offline {
-  background-color: #9E9E9E; /* Šedá pre offline */
+  background-color: #9E9E9E; 
 }
 </style>
