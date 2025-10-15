@@ -625,30 +625,21 @@ function sendMessage() {
 
     if (command === "join") {
       const channelName = parts[1]?.trim();
-      const type = parts[2]?.toLowerCase() === "private" ? "private" : "public";
+      let type: 'public' | 'private' = 'public';
+      const rest = parts.slice(2).join(' ').toLowerCase();
+      if (rest.includes('private')) type = 'private';
 
       if (!channelName) {
         systemMessage.value = "Usage: /join channelName [private]";
       } else {
-        // Skontrolujeme, či channel existuje
         const ch = channels.value.find(c => c.name.toLowerCase() === channelName.toLowerCase());
-
-        if (ch) {
-          // Ak je private a user nie je člen → error
-          if (ch.type === "private" && (!ch.members || !ch.members.includes(0))) { // 0 = aktuálny používateľ (príklad)
-            systemMessage.value = `Cannot join private channel "${channelName}"`;
-          } else {
-            activeChannel.value = ch;
-            systemMessage.value = `Joined channel "${ch.name}"`;
-          }
-        } else {
-          // Channel neexistuje → vytvoríme ho
+        if (!ch) {
           const newCh: Channel = {
             id: channels.value.length + 1,
             name: channelName,
-            type: type,
+            type,
             messages: [],
-            members: [0], // pridáme aktuálneho používateľa
+            members: [0],
             isAdmin: true,
           };
           channels.value.unshift(newCh);
