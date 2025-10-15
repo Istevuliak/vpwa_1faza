@@ -224,37 +224,37 @@
         >
             <!-- História správ -->
             <div
-              ref="historyBox"
-              class="message-history"
+              ref="alertBox"
+              class="system-message"
               style="
-                max-height: 150px;
-                overflow-y: auto;
+                height: 25px;
                 padding: 6px 12px;
                 font-family: monospace;
                 font-size: 14px;
                 color: #222;
               "
             >
-              <div v-for="(msg, index) in messages" :key="index">
-                {{ msg }}
-              </div>
+              {{systemMessage}}
+              
             </div>
 
-            <!-- Command line input -->
-            <q-input
-              ref="cliInput"
-              v-model="newMessage"
-              type="textarea"
-              borderless
-              autogrow
-              input-class="command-input"
-              input-style="padding-left: 12px;"
-              :placeholder="showPlaceholder ? 'Enter a message' : ''"
-              @focus="showPlaceholder = false"
-              @blur="showPlaceholder = true"
-              @keyup.enter.exact.prevent="sendMessage"
-              @keyup.enter.shift.stop
-            />
+            <!-- command line -->
+            <div
+                class="row q-pa-sm bg-grey-2"
+                style="position: sticky; bottom: 0;"
+            >
+                <q-input
+                ref="cliInput"
+                v-model="newMessage"
+                placeholder="Enter a message or command"
+                input-class="command-input"
+                outlined
+                dense
+                class="col"
+                @keyup.enter="sendMessage"
+                />
+                <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
+            </div>
 
 
           </div>
@@ -554,8 +554,7 @@ const toggleChannelType = (val: 'public' | 'private') => {
 // CLI fixne
 const historyBox = ref<HTMLElement | null>(null);
 const newMessage = ref("");
-const messages = ref<string[]>([]);
-const showPlaceholder = ref(true);
+const systemMessage = ref("");
 
 function sendMessage() {
   const text = newMessage.value.trim();
@@ -570,7 +569,7 @@ function sendMessage() {
       const type = parts[2]?.toLowerCase() === "private" ? "private" : "public";
 
       if (!channelName) {
-        messages.value.push("Usage: /join channelName [private]");
+        systemMessage.value = "Usage: /join channelName [private]";
       } else {
         // Skontrolujeme, či channel existuje
         const ch = channels.value.find(c => c.name.toLowerCase() === channelName.toLowerCase());
@@ -578,10 +577,10 @@ function sendMessage() {
         if (ch) {
           // Ak je private a user nie je člen → error
           if (ch.type === "private" && (!ch.members || !ch.members.includes(0))) { // 0 = aktuálny používateľ (príklad)
-            messages.value.push(`Cannot join private channel "${channelName}"`);
+            systemMessage.value = `Cannot join private channel "${channelName}"`;
           } else {
             activeChannel.value = ch;
-            messages.value.push(`Joined channel "${ch.name}"`);
+            systemMessage.value = `Joined channel "${ch.name}"`;
           }
         } else {
           // Channel neexistuje → vytvoríme ho
@@ -595,12 +594,12 @@ function sendMessage() {
           };
           channels.value.unshift(newCh);
           activeChannel.value = newCh;
-          messages.value.push(`Channel "${channelName}" created (${type})`);
+          systemMessage.value = `Channel "${channelName}" created (${type})`;
         }
       }
     } else {
       // ostatné CLI príkazy
-      messages.value.push(text);
+      systemMessage.value = "Unknown command: " + text;
     }
   } else if (activeFriend.value || activeChannel.value) {
     // správa do chatov
@@ -612,9 +611,11 @@ function sendMessage() {
         text
       });
     }
+  } else if (!activeFriend.value && !activeChannel.value) {
+    systemMessage.value = "You are outside of channel";
   } else {
     // fallback CLI
-    messages.value.push(text);
+    systemMessage.value = `Unknown command: ${text}`;
   }
 
   newMessage.value = "";
