@@ -138,7 +138,7 @@
         <!-- chatting -->
         <div class="column relative-position" style="flex: 1;">
           <!-- obsah chatu -->
-          <div v-if="activeChannel || activeFriend" class="column" style="flex: 1;">
+          <div v-if="activeChannel || activeFriend" class="column" style="flex: 1; overflow: hidden;">
             <div class="q-pa-md row items-center justify-between">
               <div class="text-h6">
                 {{ activeFriend ? activeFriend.name : activeChannel?.name }}
@@ -199,7 +199,16 @@
             <q-separator />
 
             <!-- správy -->
-            <div class="col scroll q-pa-md" style="flex: 1; overflow-y: auto;">
+              <div
+                ref="chatScrollBox"
+                class="q-pa-md"
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  display: flex;
+                  flex-direction: column;
+                  max-height: 64vh;
+                ">
               <div
                 v-for="msg in currentMessages"
                 :key="msg.id"
@@ -221,7 +230,7 @@
             class="column bg-grey-2"
             style="position: sticky; bottom: 0; border-top: 1px solid #444;"
           >
-            <!-- História správ -->
+            <!-- alerty nad inputom-->
             <div
               ref="alertBox"
               class="system-message"
@@ -611,9 +620,9 @@ const saveUserStatus = () => {
 };
 
 // CLI fixne
-const historyBox = ref<HTMLElement | null>(null);
 const newMessage = ref("");
 const systemMessage = ref("");
+const chatScrollBox = ref<HTMLElement | null>(null);
 
 function sendMessage() {
   const text = newMessage.value.trim();
@@ -661,6 +670,12 @@ function sendMessage() {
         text
       });
     }
+    void nextTick(() => {
+      if (chatScrollBox.value) {
+        chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
+      }
+    });
+
   } else if (!activeFriend.value && !activeChannel.value) {
     systemMessage.value = "You are outside of channel";
   } else {
@@ -669,12 +684,6 @@ function sendMessage() {
   }
 
   newMessage.value = "";
-
-  void nextTick(() => {
-    if (text.startsWith("/") && historyBox.value) {
-      historyBox.value.scrollTop = historyBox.value.scrollHeight;
-    }
-  });
 }
 
 </script>
