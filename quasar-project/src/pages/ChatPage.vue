@@ -109,7 +109,20 @@
               :active="activeChannel?.id === channel.id && !activeFriend"
               active-class="bg-primary text-white"
             >
-              <q-item-section>{{ channel.name }}</q-item-section>
+              <q-item-section>
+                <div>{{ channel.name }}</div>
+
+                <!-- Milan píše pod názvom -->
+                <div
+                  v-if="channel.name === 'UniLife'"
+                  class="typing-indicator"
+                >
+                  <b class="typing-name text-caption text-grey-8">Milan is typing</b>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+              </q-item-section>
             </q-item>
 
             <!-- vytvorenie channel -->
@@ -222,7 +235,7 @@
                   overflow-y: auto;
                   display: flex;
                   flex-direction: column;
-                  max-height: 64vh;
+                  max-height: 63vh;
                 ">
               <div
                 v-for="msg in currentMessages"
@@ -230,7 +243,23 @@
                 class="q-mb-sm message-container"
                 :class="{ 'mention-message': msg.text.includes('@') }"
               >
-                <b>{{ msg.user }}:</b> {{ msg.text }}
+                <!-- spravy od nas doprava -->
+                <div v-if="msg.user === 'You'" style="text-align: right;">
+                  {{ msg.text }}
+                </div>
+
+                <!-- ostatni dolava -->
+                <div v-else style="text-align: left;">
+                  <b>{{ msg.user }}:</b> {{ msg.text }}
+                </div>
+              </div>
+              <!-- Milan nam pise -->
+              <div
+                v-if="activeChannel?.name === 'UniLife'"
+                class="typing-message text-caption text-grey-7"
+              >
+                <span class="typing-name"><b>Milan:</b></span>
+                <span class="typing-text">Caute prosim kde najdem github r|</span>
               </div>
             </div>
           </div>
@@ -463,7 +492,17 @@ const toggleFriends = () => {
 const friends = ref<Friend[]>([
   // hahaha musime zmenit profiovky, toto je strasne 
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
-  { id: 2, name: 'Katka', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', status: 'offline', messages: [] },
+  { 
+    id: 2, 
+    name: 'Katka', 
+    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', 
+    status: 'offline', 
+    messages: [
+      { id: 1, user: 'Katka', text: 'Ahoj' },
+      { id: 2, user: 'Katka', text: 'Nevieš kedy máme odovzdať VPWA?' },
+      { id: 3, user: 'Katka', text: 'Neviem či stíham' },
+    ] 
+  },
   { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', status: 'dnd', messages: [] },
   { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'dnd', messages: [] },
 ]);
@@ -788,5 +827,55 @@ function sendMessage() {
 /* neprekryva sa s friend listom */
 .row.justify-start.items-center.q-pa-md.bg-yellow-2 {
   z-index: 1;
+}
+
+/* milan nam pise */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px 4px;
+  gap: 3px;
+}
+.typing-name{
+  margin-right: 4px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  background-color: #999;
+  border-radius: 50%;
+  animation: blink 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+/* realna message typing */
+.typing-message {
+  position: absolute;
+  bottom: 100px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.typing-text {
+  color: #666;
 }
 </style>
