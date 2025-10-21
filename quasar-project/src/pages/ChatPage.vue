@@ -207,7 +207,7 @@
                   overflow-y: auto;
                   display: flex;
                   flex-direction: column;
-                  max-height: 64vh;
+                  max-height: 63vh;
                 ">
               <div
                 v-for="msg in currentMessages"
@@ -215,8 +215,17 @@
                 class="q-mb-sm message-container"
                 :class="{ 'mention-message': msg.text.includes('@') }"
               >
-                <b>{{ msg.user }}:</b> {{ msg.text }}
+                <!-- Správy od TEBA doprava -->
+                <div v-if="msg.user === 'You'" style="text-align: right;">
+                  {{ msg.text }}
+                </div>
+
+                <!-- Ostatní používatelia doľava -->
+                <div v-else style="text-align: left;">
+                  <b>{{ msg.user }}:</b> {{ msg.text }}
+                </div>
               </div>
+
             </div>
           </div>
 
