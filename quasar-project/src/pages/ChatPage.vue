@@ -94,7 +94,20 @@
               :active="activeChannel?.id === channel.id && !activeFriend"
               active-class="bg-primary text-white"
             >
-              <q-item-section>{{ channel.name }}</q-item-section>
+              <q-item-section>
+                <div>{{ channel.name }}</div>
+
+                <!-- Milan píše pod názvom -->
+                <div
+                  v-if="channel.name === 'UniLife'"
+                  class="typing-indicator"
+                >
+                  <b class="typing-name text-caption text-grey-8">Milan is typing</b>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+              </q-item-section>
             </q-item>
 
             <!-- vytvorenie channel -->
@@ -227,15 +240,12 @@
               </div>
               <!-- Milan nam pise -->
               <div
-                v-if="activeFriend?.name === 'Milan'"
-                class="typing-indicator"
+                v-if="activeChannel?.name === 'UniLife'"
+                class="typing-message text-caption text-grey-7"
               >
-                <b class="typing-name">Milan</b>
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
+                <span class="typing-name"><b>Milan:</b></span>
+                <span class="typing-text">Caute prosim kde najdem github r|</span>
               </div>
-
             </div>
           </div>
 
@@ -762,18 +772,16 @@ function sendMessage() {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 6px 6px;
-  gap: 4px;
-  position: absolute;
-  bottom: 90px;
+  padding: 4px 4px;
+  gap: 3px;
 }
 .typing-name{
   margin-right: 4px;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   background-color: #999;
   border-radius: 50%;
   animation: blink 1.2s infinite ease-in-out;
@@ -791,4 +799,21 @@ function sendMessage() {
   40% { opacity: 1; }
 }
 
+/* realna message typing */
+.typing-message {
+  position: absolute;
+  bottom: 100px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.typing-text {
+  color: #666;
+}
 </style>
