@@ -215,15 +215,25 @@
                 class="q-mb-sm message-container"
                 :class="{ 'mention-message': msg.text.includes('@') }"
               >
-                <!-- Správy od TEBA doprava -->
+                <!-- spravy od nas doprava -->
                 <div v-if="msg.user === 'You'" style="text-align: right;">
                   {{ msg.text }}
                 </div>
 
-                <!-- Ostatní používatelia doľava -->
+                <!-- ostatni dolava -->
                 <div v-else style="text-align: left;">
                   <b>{{ msg.user }}:</b> {{ msg.text }}
                 </div>
+              </div>
+              <!-- Milan nam pise -->
+              <div
+                v-if="activeFriend?.name === 'Milan'"
+                class="typing-indicator"
+              >
+                <b class="typing-name">Milan</b>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
               </div>
 
             </div>
@@ -456,7 +466,17 @@ const toggleFriends = () => {
 const friends = ref<Friend[]>([
   // zmenit im profilovky, toto je hrozneee
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
-  { id: 2, name: 'Katka', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', status: 'offline', messages: [] },
+  { 
+    id: 2, 
+    name: 'Katka', 
+    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', 
+    status: 'offline', 
+    messages: [
+      { id: 1, user: 'Katka', text: 'Ahoj' },
+      { id: 2, user: 'Katka', text: 'Nevieš kedy máme odovzdať VPWA?' },
+      { id: 3, user: 'Katka', text: 'Neviem či stíham' },
+    ] 
+  },
   { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', status: 'dnd', messages: [] },
   { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'dnd', messages: [] },
 ]);
@@ -713,7 +733,7 @@ function sendMessage() {
   background-color: #9bc3ff; 
 }
 
-/* Status indicators */
+/* status indicators */
 .status-indicator {
   width: 12px;
   height: 12px;
@@ -736,4 +756,39 @@ function sendMessage() {
 .status-offline {
   background-color: #9E9E9E; 
 }
+
+/* milan nam pise */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 6px;
+  gap: 4px;
+  position: absolute;
+  bottom: 90px;
+}
+.typing-name{
+  margin-right: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #999;
+  border-radius: 50%;
+  animation: blink 1.2s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
 </style>
