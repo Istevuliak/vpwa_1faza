@@ -110,7 +110,11 @@
               active-class="bg-primary text-white"
             >
               <q-item-section>
-                <div>{{ channel.name }}</div>
+                <div class="row items-center justify-between">
+                  <span>{{ channel.name }}</span>
+                  <q-icon v-if="channel.type === 'public'" class="material-symbols-outlined symbol">public</q-icon>
+                  <q-icon v-else class="material-symbols-outlined symbol">lock</q-icon>
+                </div>
 
                 <!-- Milan píše pod názvom -->
                 <div
@@ -194,19 +198,6 @@
                       >
                         <q-item-section class="text-negative">Delete channel</q-item-section>
                       </q-item>
-                      <q-item v-if="activeChannel?.isAdmin">
-                        <q-item-section>
-                          <div class="row items-center justify-between">
-                            <span>Private</span>
-                            <q-toggle
-                              v-model="activeChannel.type"
-                              true-value="private"
-                              false-value="public"
-                              @update:model-value="toggleChannelType"
-                            />
-                          </div>
-                        </q-item-section>
-                      </q-item>
                     </q-list>
                   </q-menu>
                 </q-btn>
@@ -258,7 +249,7 @@
                 v-if="activeChannel?.name === 'UniLife'"
                 class="typing-message text-caption text-grey-7"
               >
-                <span class="typing-name"><b>Milan:</b></span>
+                <span class="typing-name"><b>Milan is typing:</b></span>
                 <span class="typing-text">Caute prosim kde najdem github r|</span>
               </div>
             </div>
@@ -661,11 +652,6 @@ const removePeopleFromChannel = () => {
   );
   showRemovePeopleDialog.value = false;
   selectedFriends.value = [];
-};
-
-const toggleChannelType = (val: 'public' | 'private') => {
-  if (!activeChannel.value) return;
-  activeChannel.value.type = val;
 };
 
 // Funkcia na uloženie stavu používateľa
