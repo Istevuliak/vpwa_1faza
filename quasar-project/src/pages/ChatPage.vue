@@ -30,32 +30,47 @@
 
     <!-- Hlavna cast chatu -->
     <div class="column col bg-white">
-      <!-- freinds aby to nebolo take prazdne, na zvazenie ci to potrebujeme a chceme mat -->
-      <div class="row justify-start items-center q-pa-md bg-yellow-2">
-        <div
-          v-for="friend in friends"
-          :key="friend.id"
-          class="column items-center cursor-pointer q-mr-md"
-          style="width: 60px;"
-          @click="openFriendChat(friend)"
-        >
-          <div class="relative-position">
-            <ProfilePicture
-              :avatar="friend.avatar"
-              size="50px"
-              bgColor="grey-3"
-            />
-            <div class="status-indicator" :class="`status-${friend.status}`"></div>
+      <!-- Sekcia s freinds + notification -->
+      <div class="notification-wrapper relative-position">
+        <!-- freinds list -->
+        <div class="row justify-start items-center q-pa-md bg-yellow-2">
+          <div
+            v-for="friend in friends"
+            :key="friend.id"
+            class="column items-center cursor-pointer q-mr-md"
+            style="width: 60px;"
+            @click="openFriendChat(friend)"
+          >
+            <div class="relative-position">
+              <ProfilePicture
+                :avatar="friend.avatar"
+                size="50px"
+                bgColor="grey-3"
+              />
+              <div class="status-indicator" :class="`status-${friend.status}`"></div>
+            </div>
+            <div class="text-caption ellipsis">{{ friend.name }}</div>
           </div>
-          <div class="text-caption ellipsis">{{ friend.name }}</div>
+
+          <!-- Add friend button -->
+          <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
+            <q-avatar size="50px" color="yellow-8" text-color="black">
+              <q-icon name="add" />
+            </q-avatar>
+            <div class="text-caption">Add friends</div>
+          </div>
         </div>
 
-        <!-- Add friend tlačidlo -->
-        <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
-          <q-avatar size="50px" color="yellow-8" text-color="black">
-            <q-icon name="add" />
-          </q-avatar>
-          <div class="text-caption">Add friends</div>
+        <!-- Notifikácia v pravom hornom rohu -->
+        <div class="notification-positioner">
+          <ChatNotification
+            v-if="showChatNotification"
+            :sender-name="notificationData.senderName"
+            :sender-avatar="notificationData.senderAvatar"
+            :message="notificationData.message"
+            :duration="4000"
+            @close="handleNotificationClose"
+          />
         </div>
       </div>
 
@@ -211,7 +226,7 @@
 
             <q-separator />
 
-            <!-- správy -->
+            <!-- messages -->
               <div
                 ref="chatScrollBox"
                 class="q-pa-md"
@@ -249,12 +264,12 @@
             </div>
           </div>
 
-          <!-- ak nič nie je vybrané -->
+          <!-- ak nie je vybrate nic -->
           <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
             <div>Select a channel or friend to start chatting</div>
           </div>
 
-          <!-- fixný spodný riadok na odoslanie -->
+          <!-- fixny riadok na pisanie -->
           <div
             class="column bg-grey-2"
             style="position: sticky; bottom: 0; border-top: 1px solid #444;"
@@ -406,7 +421,7 @@
       </q-card>
     </q-dialog>
 
-    <!-- Dialog pre nastavenie stavu používateľa -->
+    <!-- Dialog pre nastavenie statusu usera -->
     <q-dialog v-model="showStatusDialog">
       <q-card style="min-width: 300px;">
         <q-card-section>
@@ -433,8 +448,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue'; // to onMounted je pouzite na notifikacie 
 import ProfilePicture from '../components/ProfilePicture.vue';
+import ChatNotification from '../components/ChatNotification.vue';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
@@ -474,7 +490,7 @@ const toggleFriends = () => {
 };
 
 const friends = ref<Friend[]>([
-  // zmenit im profilovky, toto je hrozneee
+  // hahaha musime zmenit profiovky, toto je strasne 
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
   { 
     id: 2, 
@@ -663,6 +679,35 @@ const newMessage = ref("");
 const systemMessage = ref("");
 const chatScrollBox = ref<HTMLElement | null>(null);
 
+// Notifikácia data
+interface NotificationData {
+  senderName: string;
+  senderAvatar: string;
+  message: string;
+}
+
+const showChatNotification = ref(false);
+const notificationData = ref<NotificationData>({
+  senderName: 'Katka',
+  senderAvatar: 'https://cdn.quasar.dev/img/avatar2.jpg',
+  message: 'Ahoj pocuj ako mam spravit toto??'
+});
+
+// spustanie notifikacie
+const triggerChatNotification = () => {
+  showChatNotification.value = true;
+};
+
+// zatvaranie notifikacie (po 4 sekundach)
+const handleNotificationClose = () => {
+  showChatNotification.value = false;
+};
+
+// Spustenie statickej notifikácie pri načítaní
+onMounted(() => {
+  triggerChatNotification();
+});
+
 function sendMessage() {
   const text = newMessage.value.trim();
   if (!text) return;
@@ -743,7 +788,7 @@ function sendMessage() {
   background-color: #9bc3ff; 
 }
 
-/* status indicators */
+/* Status indicatory */
 .status-indicator {
   width: 12px;
   height: 12px;
@@ -765,6 +810,23 @@ function sendMessage() {
 
 .status-offline {
   background-color: #9E9E9E; 
+}
+
+.notification-wrapper {
+  position: relative;
+  min-height: 80px;
+}
+
+.notification-positioner {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+/* neprekryva sa s friend listom */
+.row.justify-start.items-center.q-pa-md.bg-yellow-2 {
+  z-index: 1;
 }
 
 /* milan nam pise */
