@@ -553,6 +553,12 @@ const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
+const channelMembers = computed(() => {
+  if (!activeChannel.value?.members) return [];
+  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id));
+});
+
+
 const dummyMessages = Array.from({ length: 40 }, (_, i) => ({ //tu mame 40 fixnych sprav medzi nami a Maggie na vyskusanie efektivneho scrollu
   id: i + 1,
   user: i % 2 === 0 ? 'You' : 'Maggie',
