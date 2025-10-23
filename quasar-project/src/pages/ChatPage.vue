@@ -20,7 +20,6 @@
         title="Channels"
         @click="toggleChannels"
       />
-
       <!-- Invitations -->
       <div class="relative-position q-mb-md">
         <q-btn flat round icon="mail" color="primary" title="Invitations" @click="openInvitations" />
@@ -51,7 +50,6 @@
             </div>
             <div class="text-caption ellipsis">{{ friend.name }}</div>
           </div>
-
           <!-- Add friend button -->
           <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
             <q-avatar size="50px" color="yellow-8" text-color="black">
@@ -60,7 +58,6 @@
             <div class="text-caption">Add friends</div>
           </div>
         </div>
-
         <!-- Notifikácia v pravom hornom rohu -->
         <div class="notification-positioner">
           <ChatNotification
@@ -100,7 +97,6 @@
                 </q-btn>
               </div>
             </q-item-label>
-
             <q-item
               v-for="channel in filteredChannels"
               :key="channel.id"
@@ -111,7 +107,6 @@
             >
               <q-item-section>
                 <div>{{ channel.name }}</div>
-
                 <!-- Milan píše pod názvom -->
                 <div
                   v-if="channel.name === 'UniLife'"
@@ -124,7 +119,6 @@
                 </div>
               </q-item-section>
             </q-item>
-
             <!-- vytvorenie channel -->
             <q-item clickable @click="showCreateChannelDialog = true">
               <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
@@ -155,7 +149,6 @@
               </div>
               <q-item-section>{{ friend.name }}</q-item-section>
             </q-item>
-
             <q-item clickable @click="showAddFriendDialog = true">
               <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
               <q-item-section>Add friends</q-item-section>
@@ -171,7 +164,6 @@
               <div class="text-h6">
                 {{ activeFriend ? activeFriend.name : activeChannel?.name }}
               </div>
-
               <!-- menu: only if channel -->
               <div v-if="activeChannel">
                 <q-btn flat round dense icon="more_vert">
@@ -223,20 +215,18 @@
                 </q-btn>
               </div>
             </div>
-
             <q-separator />
-
             <!-- messages -->
-              <div
-                ref="chatScrollBox"
-                class="q-pa-md"
-                style="
-                  flex: 1;
-                  overflow-y: auto;
-                  display: flex;
-                  flex-direction: column;
-                  max-height: 63vh;
-                ">
+            <div
+              ref="chatScrollBox"
+              class="q-pa-md"
+              style="
+                flex: 1;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                max-height: 63vh;
+              ">
               <div
                 v-for="msg in currentMessages"
                 :key="msg.id"
@@ -247,7 +237,6 @@
                 <div v-if="msg.user === 'You'" style="text-align: right;">
                   {{ msg.text }}
                 </div>
-
                 <!-- ostatni dolava -->
                 <div v-else style="text-align: left;">
                   <b>{{ msg.user }}:</b> {{ msg.text }}
@@ -263,12 +252,10 @@
               </div>
             </div>
           </div>
-
           <!-- ak nie je vybrate nic -->
           <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
             <div>Select a channel or friend to start chatting</div>
           </div>
-
           <!-- fixny riadok na pisanie -->
           <div
             class="column bg-grey-2"
@@ -287,9 +274,7 @@
               "
             >
               {{systemMessage}}
-              
             </div>
-
             <!-- command line -->
             <div
                 class="row q-pa-sm bg-grey-2"
@@ -307,8 +292,6 @@
                 />
                 <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
             </div>
-
-
           </div>
         </div>
       </div>
@@ -444,11 +427,44 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Dialog pre zoznam členov kanála -->
+    <q-dialog v-model="showMembersDialog">
+      <q-card style="min-width: 300px;">
+        <q-card-section>
+          <div class="text-h6">Members of {{ activeChannel?.name }}</div>
+        </q-card-section>
+        <q-card-section style="max-height: 300px; overflow-y: auto;"> <!-- toto je scrolling -->
+          <q-list bordered separator>
+            <q-item v-for="member in channelMembers" :key="member.id">
+              <q-item-section>
+                <div class="row items-center">
+                  <ProfilePicture
+                    :avatar="member.avatar"
+                    size="40px"
+                    bgColor="grey-3"
+                    class="q-mr-sm"
+                  />
+                  <span>{{ member.name }}</span>
+                  <div class="status-indicator q-ml-sm" :class="`status-${member.status}`"></div>
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="!channelMembers.length">
+              <q-item-section>No members in this channel</q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="black" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue'; // to onMounted je pouzite na notifikacie 
+import { ref, computed, nextTick, onMounted } from 'vue';
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
 
@@ -472,11 +488,11 @@ const statusOptions = [
   { label: 'Offline', value: 'offline' as const },
 ];
 
-// Aktuálny stav používateľa (statický pre tento príklad)
+// Aktuálny stav používateľa
 const userStatus = ref<UserStatus>('online');
 
 // zobrazenie channel listu
-const showChannels = ref(true); // defaultne true
+const showChannels = ref(true);
 const toggleChannels = () => {
   showChannels.value = !showChannels.value;
   if (showChannels.value) showFriends.value = false;
@@ -490,7 +506,6 @@ const toggleFriends = () => {
 };
 
 const friends = ref<Friend[]>([
-  // hahaha musime zmenit profiovky, toto je strasne 
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
   { 
     id: 2, 
@@ -505,11 +520,18 @@ const friends = ref<Friend[]>([
   },
   { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', status: 'dnd', messages: [] },
   { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'dnd', messages: [] },
+  { id: 5, name: 'Tomas', avatar: 'https://cdn.quasar.dev/img/avatar5.jpg', status: 'online', messages: [] },
+  { id: 6, name: 'Martin', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'offline', messages: [] },
+  { id: 7, name: 'Andrej', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'dnd', messages: [] },
+  { id: 8, name: 'Ema', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
+  { id: 9, name: 'Miska', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'online', messages: [] },
+  { id: 10, name: 'Juraj', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', status: 'online', messages: [] },
+  { id: 11, name: 'MAx', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'offline', messages: [] }
 ]);
 
 const newChannelType = ref<'public' | 'private'>('public');
 const channels = ref<Channel[]>([
-  { id: 1, name: 'General', type: 'public', messages: [], members: [1, 2, 3], isAdmin: true },
+  { id: 1, name: 'General', type: 'public', messages: [], members: [1, 2, 3,4,5,6,7,8,9], isAdmin: true },
   { id: 2, name: 'UniLife', type: 'private', messages: [], members: [2, 3] },
 ]);
 
@@ -526,13 +548,20 @@ const showCreateChannelDialog = ref(false);
 const showAddPeopleDialog = ref(false);
 const showRemovePeopleDialog = ref(false);
 const showStatusDialog = ref(false);
+const showMembersDialog = ref(false); // Nový dialog pre zoznam členov
 const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
+// Zoznam členov pre dialog
+const channelMembers = computed(() => {
+  if (!activeChannel.value?.members) return [];
+  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id));
+});
+
 const selectChannel = (ch: Channel) => {
   if (activeChannel.value?.id === ch.id) {
-    activeChannel.value = null;  // zrušíme výber, zobrazí sa placeholder
+    activeChannel.value = null;
   } else {
     activeFriend.value = null;
     activeChannel.value = ch;
@@ -541,7 +570,7 @@ const selectChannel = (ch: Channel) => {
 
 const openFriendChat = (f: Friend) => {
   if (activeFriend.value?.id === f.id) {
-    activeFriend.value = null;   // zrušíme výber, zobrazí sa placeholder
+    activeFriend.value = null;
   } else {
     activeChannel.value = null;
     activeFriend.value = f;
@@ -553,7 +582,6 @@ const addFriend = () => {
   if (!name) return;
   const nicknameExists = friends.value.some(f => f.name.toLowerCase() === name.toLowerCase());
   if (nicknameExists) {
-    // musi mat unikatne meno
     alert('You are already friends with this person!');
     return;
   }
@@ -567,7 +595,7 @@ const addFriend = () => {
   };
   friends.value.unshift(newFr);
   activeFriend.value = newFr;
-  newFriendName.value = ''; 
+  newFriendName.value = '';
   showAddFriendDialog.value = false;
 };
 
@@ -582,7 +610,7 @@ const acceptInvite = (id: number) => {
   const newCh: Channel = {
     id: channels.value.length + 1,
     name: inv?.channel || 'New Channel',
-    type: 'private', 
+    type: 'private',
     messages: [],
   };
   if (inv) channels.value.unshift(newCh);
@@ -602,10 +630,8 @@ const createChannel = () => {
   const name = newChannelName.value.trim();
   if (!name) return;
 
-  // kontrola ci uz meno existuje
   const nameExists = channels.value.some(ch => ch.name.toLowerCase() === name.toLowerCase());
   if (nameExists) {
-    // musi mat unikatne meno
     alert('Channel name already exists!');
     return;
   }
@@ -621,8 +647,6 @@ const createChannel = () => {
 
   channels.value.unshift(newCh);
   activeChannel.value = newCh;
-
-  // reset hodnot
   newChannelName.value = '';
   selectedFriends.value = [];
   newChannelType.value = 'public';
@@ -668,9 +692,7 @@ const toggleChannelType = (val: 'public' | 'private') => {
   activeChannel.value.type = val;
 };
 
-// Funkcia na uloženie stavu používateľa
 const saveUserStatus = () => {
-  // Tu by sa stav uložil na server, momentálne len zatvoríme dialog
   showStatusDialog.value = false;
 };
 
@@ -693,17 +715,14 @@ const notificationData = ref<NotificationData>({
   message: 'Ahoj pocuj ako mam spravit toto??'
 });
 
-// spustanie notifikacie
 const triggerChatNotification = () => {
   showChatNotification.value = true;
 };
 
-// zatvaranie notifikacie (po 4 sekundach)
 const handleNotificationClose = () => {
   showChatNotification.value = false;
 };
 
-// Spustenie statickej notifikácie pri načítaní
 onMounted(() => {
   triggerChatNotification();
 });
@@ -740,12 +759,16 @@ function sendMessage() {
           systemMessage.value = `Channel "${channelName}" created (${type})`;
         }
       }
+    } else if (command === "list") {
+      if (activeChannel.value) {
+        showMembersDialog.value = true; // Zobrazí dialog so zoznamom členov
+      } else {
+        systemMessage.value = "No channel selected";
+      }
     } else {
-      // ostatné CLI príkazy
       systemMessage.value = "Unknown command: " + text;
     }
   } else if (activeFriend.value || activeChannel.value) {
-    // správa do chatov
     const target = activeFriend.value ?? activeChannel.value;
     if (target?.messages) {
       target.messages.push({
@@ -759,17 +782,12 @@ function sendMessage() {
         chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
       }
     });
-
-  } else if (!activeFriend.value && !activeChannel.value) {
-    systemMessage.value = "You are outside of channel";
   } else {
-    // fallback CLI
-    systemMessage.value = `Unknown command: ${text}`;
+    systemMessage.value = "You are outside of channel";
   }
 
   newMessage.value = "";
 }
-
 </script>
 
 <style scoped>
@@ -787,8 +805,6 @@ function sendMessage() {
 .mention-message {
   background-color: #9bc3ff; 
 }
-
-/* Status indicatory */
 .status-indicator {
   width: 12px;
   height: 12px;
@@ -799,37 +815,28 @@ function sendMessage() {
   right: 2px;
   z-index: 1;
 }
-
 .status-online {
   background-color: #4CAF50;
 }
-
 .status-dnd {
   background-color: #F44336; 
 }
-
 .status-offline {
   background-color: #9E9E9E; 
 }
-
 .notification-wrapper {
   position: relative;
   min-height: 80px;
 }
-
 .notification-positioner {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 1000;
 }
-
-/* neprekryva sa s friend listom */
 .row.justify-start.items-center.q-pa-md.bg-yellow-2 {
   z-index: 1;
 }
-
-/* milan nam pise */
 .typing-indicator {
   display: flex;
   align-items: center;
@@ -837,10 +844,9 @@ function sendMessage() {
   padding: 4px 4px;
   gap: 3px;
 }
-.typing-name{
+.typing-name {
   margin-right: 4px;
 }
-
 .dot {
   width: 4px;
   height: 4px;
@@ -848,20 +854,16 @@ function sendMessage() {
   border-radius: 50%;
   animation: blink 1.2s infinite ease-in-out;
 }
-
 .dot:nth-child(2) {
   animation-delay: 0.2s;
 }
 .dot:nth-child(3) {
   animation-delay: 0.4s;
 }
-
 @keyframes blink {
   0%, 80%, 100% { opacity: 0.3; }
   40% { opacity: 1; }
 }
-
-/* realna message typing */
 .typing-message {
   position: absolute;
   bottom: 100px;
@@ -874,7 +876,6 @@ function sendMessage() {
   padding: 6px 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-
 .typing-text {
   color: #666;
 }
