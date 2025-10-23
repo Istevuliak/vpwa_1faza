@@ -111,7 +111,12 @@
               active-class="bg-primary text-white"
             >
               <q-item-section>
-                <div>{{ channel.name }}</div>
+                <div class="row items-center justify-between">
+                  <span>{{ channel.name }}</span>
+                  <q-icon v-if="channel.type === 'public'" class="material-symbols-outlined symbol">public</q-icon>
+                  <q-icon v-else class="material-symbols-outlined symbol">lock</q-icon>
+                </div>
+
                 <!-- Milan píše pod názvom -->
                 <div
                   v-if="channel.name === 'UniLife'"
@@ -191,19 +196,6 @@
                       >
                         <q-item-section class="text-negative">Delete channel</q-item-section>
                       </q-item>
-                      <q-item v-if="activeChannel?.isAdmin">
-                        <q-item-section>
-                          <div class="row items-center justify-between">
-                            <span>Private</span>
-                            <q-toggle
-                              v-model="activeChannel.type"
-                              true-value="private"
-                              false-value="public"
-                              @update:model-value="toggleChannelType"
-                            />
-                          </div>
-                        </q-item-section>
-                      </q-item>
                     </q-list>
                   </q-menu>
                 </q-btn>
@@ -222,18 +214,21 @@
             </div>
             <q-separator />
             <!-- messages -->
-            <div
-              ref="chatScrollBox"
-              class="q-pa-md"
-              style="
-                flex: 1;
-                overflow-y: auto;
-                display: flex;
-                flex-direction: column;
-                max-height: 63vh;
-              ">
               <div
-                v-for="msg in currentMessages"
+                ref="chatScrollBox"
+                class="q-pa-md"
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  display: flex;
+                  flex-direction: column;
+                  max-height: 63vh;
+                ">
+                <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
+                <q-spinner size="24px" color="primary" />
+              </div>
+              <div
+                v-for="msg in visibleMessages"
                 :key="msg.id"
                 class="q-mb-sm message-container"
                 :class="{ 'mention-message': msg.text.includes('@') }"
@@ -252,7 +247,7 @@
                 v-if="activeChannel?.name === 'UniLife'"
                 class="typing-message text-caption text-grey-7"
               >
-                <span class="typing-name"><b>Milan:</b></span>
+                <span class="typing-name"><b>Milan is typing:</b></span>
                 <span class="typing-text">Caute prosim kde najdem github r|</span>
               </div>
             </div>
@@ -469,7 +464,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted, watch } from 'vue'; // to onMounted je pouzite na notifikacie 
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
 
@@ -558,15 +553,38 @@ const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
-// Zoznam členov pre dialog
-const channelMembers = computed(() => {
-  if (!activeChannel.value?.members) return [];
-  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id));
+const dummyMessages = Array.from({ length: 40 }, (_, i) => ({ //tu mame 40 fixnych sprav medzi nami a Maggie na vyskusanie efektivneho scrollu
+  id: i + 1,
+  user: i % 2 === 0 ? 'You' : 'Maggie',
+  text: i % 2 === 0 ? `Tvoja správa ${i + 1}` : `Maggie odpoveď ${i + 1}`,
+}));
+
+const maggie = friends.value.find(f => f.name === 'Maggie');
+if (maggie) maggie.messages = dummyMessages;
+
+// tu je efektivny scroll
+const isLoadingMore = ref(false);
+const loadedMessagesCount = ref(20); //batch mame na 20 sprav
+
+const visibleMessages = computed(() => {
+  if (!activeFriend.value && !activeChannel.value) return [];
+  const msgs = currentMessages.value || [];
+  return msgs.slice(-loadedMessagesCount.value); //ukaze nam tych poslednych 20
 });
+
+const loadMoreMessages = async () => {
+  if (isLoadingMore.value) return;
+  if (loadedMessagesCount.value >= (currentMessages.value?.length || 0)) return; //uz je nacitane vsetko
+
+  isLoadingMore.value = true;
+  await new Promise(resolve => setTimeout(resolve, 1000)); //simulujeme nacitavanie
+  loadedMessagesCount.value += 10; //nacita nam dalsich 10
+  isLoadingMore.value = false;
+};
 
 const selectChannel = (ch: Channel) => {
   if (activeChannel.value?.id === ch.id) {
-    activeChannel.value = null;
+    activeChannel.value = null;  //zrusime vyber a zobrazi placeholder
   } else {
     activeFriend.value = null;
     activeChannel.value = ch;
@@ -575,7 +593,7 @@ const selectChannel = (ch: Channel) => {
 
 const openFriendChat = (f: Friend) => {
   if (activeFriend.value?.id === f.id) {
-    activeFriend.value = null;
+    activeFriend.value = null;   //zrus vyber, zobraz placeholder
   } else {
     activeChannel.value = null;
     activeFriend.value = f;
@@ -692,11 +710,7 @@ const removePeopleFromChannel = () => {
   selectedFriends.value = [];
 };
 
-const toggleChannelType = (val: 'public' | 'private') => {
-  if (!activeChannel.value) return;
-  activeChannel.value.type = val;
-};
-
+// to bude funkcia ktorou ulozime status usera na server- momentalne len zavrieme dialog
 const saveUserStatus = () => {
   showStatusDialog.value = false;
 };
@@ -706,7 +720,7 @@ const newMessage = ref("");
 const systemMessage = ref("");
 const chatScrollBox = ref<HTMLElement | null>(null);
 
-// Notifikácia data
+// notifikacia data
 interface NotificationData {
   senderName: string;
   senderAvatar: string;
@@ -728,8 +742,23 @@ const handleNotificationClose = () => {
   showChatNotification.value = false;
 };
 
+// spustame fixne notifikaciu pri kazdom reloadnuti stranky
 onMounted(() => {
   triggerChatNotification();
+
+  const el = chatScrollBox.value;
+  if (!el) return;
+
+  el.addEventListener('scroll', () => {
+    if (el.scrollTop <= 100 && !isLoadingMore.value) {
+      const oldHeight = el.scrollHeight;
+      void (async () => {
+        await loadMoreMessages();
+        await nextTick();
+        el.scrollTop = el.scrollHeight - oldHeight;
+      })();
+    }
+  });
 });
 
 function sendMessage() {
@@ -793,6 +822,33 @@ function sendMessage() {
 
   newMessage.value = "";
 }
+
+//watcher na sledovanie zmeny aktivneho chatu a nastavenie scroll listenera
+watch([activeFriend, activeChannel], async () => {
+  await nextTick();
+  const el = chatScrollBox.value;
+  if (!el) return;
+
+  // odpoj starý listener, aby sa nepridával duplicitne
+  el.onscroll = null;
+
+  el.addEventListener('scroll', () => {
+    if (el.scrollTop <= 100 && !isLoadingMore.value) {
+      const oldHeight = el.scrollHeight;
+      void (async () => {
+        await loadMoreMessages();
+        await nextTick();
+        el.scrollTop = el.scrollHeight - oldHeight;
+      })();
+    }
+  });
+  await nextTick();
+  if (chatScrollBox.value) {
+    chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
+  }
+
+});
+
 </script>
 
 <style scoped>
