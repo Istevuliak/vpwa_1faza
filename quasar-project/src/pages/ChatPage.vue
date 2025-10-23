@@ -30,47 +30,52 @@
     <!-- Hlavna cast chatu -->
     <div class="column col bg-white">
       <!-- Sekcia s freinds + notification -->
-      <div class="notification-wrapper relative-position">
+      <q-card flat class="column justify-start items-center bg-yellow-2" style="height: 85px; flex-shrink: 0;">
         <!-- freinds list -->
-        <div class="row justify-start items-center q-pa-md bg-yellow-2">
-          <div
-            v-for="friend in friends"
-            :key="friend.id"
-            class="column items-center cursor-pointer q-mr-md"
-            style="width: 60px;"
-            @click="openFriendChat(friend)"
+        <div class="notification-wrapper relative-position full-width">
+          <q-scroll-area
+            class="full-width"
+            style="height: 105px;"
+            horizontal
           >
-            <div class="relative-position">
-              <ProfilePicture
-                :avatar="friend.avatar"
-                size="50px"
-                bgColor="grey-3"
-              />
-              <div class="status-indicator" :class="`status-${friend.status}`"></div>
+            <div class="row no-wrap justify-start items-center q-pa-md bg-yellow-2 friends-list-content">
+              <div
+                v-for="friend in friends"
+                :key="friend.id"
+                class="column items-center cursor-pointer friend-item"
+                style="width: 70px; flex-shrink: 0;"
+                @click="openFriendChat(friend)"
+              >
+                <div class="relative-position">
+                  <ProfilePicture
+                    :avatar="friend.avatar"
+                    size="50px"
+                    bgColor="grey-3"
+                  />
+                  <div class="status-indicator" :class="`status-${friend.status}`"></div>
+                </div>
+                <div class="text-caption ellipsis text-center" style="width: 70px;">{{ friend.name }}</div>
+              </div>
+              <div class="column items-center justify-center cursor-pointer friend-item" @click="showAddFriendDialog = true" style="width: 70px; flex-shrink: 0;">
+                <q-avatar size="50px" color="yellow-8" text-color="black">
+                  <q-icon name="add" />
+                </q-avatar>
+                <div class="text-caption text-center">Add friends</div>
+              </div>
             </div>
-            <div class="text-caption ellipsis">{{ friend.name }}</div>
-          </div>
-          <!-- Add friend button -->
-          <div class="column items-center justify-center cursor-pointer" @click="showAddFriendDialog = true">
-            <q-avatar size="50px" color="yellow-8" text-color="black">
-              <q-icon name="add" />
-            </q-avatar>
-            <div class="text-caption">Add friends</div>
+          </q-scroll-area>
+          <div class="notification-positioner">
+            <ChatNotification
+              v-if="showChatNotification"
+              :sender-name="notificationData.senderName"
+              :sender-avatar="notificationData.senderAvatar"
+              :message="notificationData.message"
+              :duration="4000"
+              @close="handleNotificationClose"
+            />
           </div>
         </div>
-        <!-- Notifikácia v pravom hornom rohu -->
-        <div class="notification-positioner">
-          <ChatNotification
-            v-if="showChatNotification"
-            :sender-name="notificationData.senderName"
-            :sender-avatar="notificationData.senderAvatar"
-            :message="notificationData.message"
-            :duration="4000"
-            @close="handleNotificationClose"
-          />
-        </div>
-      </div>
-
+      </q-card>
       <!-- hlavna chatova cast -->
       <div class="row col">
         <!-- channels zoznams -->
