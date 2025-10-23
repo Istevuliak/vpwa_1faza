@@ -86,6 +86,17 @@
             <q-item clickable v-close-popup @click="showChangePasswordDialog = true">
               <q-item-section>Change password</q-item-section>
             </q-item>
+            <q-item>
+              <q-item-section>
+                <q-toggle
+                  v-model="notifyOnlyWhenTagged"
+                  label="Notify only when tagged"
+                  @update:model-value="handleNotifyToggle"
+                >
+                  <q-tooltip>Receive notifications only when mentioned or tagged</q-tooltip>
+                </q-toggle>
+              </q-item-section>
+            </q-item>
           </q-list>
         </q-menu>
 
@@ -308,6 +319,12 @@ async function confirmLogout() {
 
 function toggleRightDrawer() {
   rightDrawerOpen.value = !rightDrawerOpen.value;
+}
+const notifyOnlyWhenTagged = ref(false);
+
+function handleNotifyToggle(value: boolean) {
+  console.log('Notify only when tagged:', value);
+  // nejaky backend uz
 }
 </script>
 
