@@ -39,6 +39,12 @@
             horizontal
           >
             <div class="row no-wrap justify-start items-center q-pa-md bg-yellow-2 friends-list-content">
+              <div class="column items-center justify-center cursor-pointer friend-item" @click="showAddFriendDialog = true" style="width: 70px; flex-shrink: 0;">
+                <q-avatar size="50px" color="yellow-8" text-color="black">
+                  <q-icon name="add" />
+                </q-avatar>
+                <div class="text-caption text-center">Add friends</div>
+              </div>
               <div
                 v-for="friend in friends"
                 :key="friend.id"
@@ -56,12 +62,7 @@
                 </div>
                 <div class="text-caption ellipsis text-center" style="width: 70px;">{{ friend.name }}</div>
               </div>
-              <div class="column items-center justify-center cursor-pointer friend-item" @click="showAddFriendDialog = true" style="width: 70px; flex-shrink: 0;">
-                <q-avatar size="50px" color="yellow-8" text-color="black">
-                  <q-icon name="add" />
-                </q-avatar>
-                <div class="text-caption text-center">Add friends</div>
-              </div>
+              
             </div>
           </q-scroll-area>
           <div class="notification-positioner">
@@ -102,6 +103,13 @@
                 </q-btn>
               </div>
             </q-item-label>
+
+            <!-- vytvorenie channel -->
+            <q-item clickable @click="showCreateChannelDialog = true" class="row reverse ">
+              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
+              <q-item-section>Create Channel</q-item-section>
+            </q-item>
+
             <q-item
               v-for="channel in filteredChannels"
               :key="channel.id"
@@ -128,11 +136,6 @@
                   <span class="dot"></span>
                 </div>
               </q-item-section>
-            </q-item>
-            <!-- vytvorenie channel -->
-            <q-item clickable @click="showCreateChannelDialog = true">
-              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
-              <q-item-section>Create Channel</q-item-section>
             </q-item>
           </q-list>
         </div>
