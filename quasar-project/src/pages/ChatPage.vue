@@ -80,7 +80,65 @@
       <!-- hlavna chatova cast -->
       <div class="row col">
         <!-- channels zoznams -->
-        <div v-if="showChannels" class="col-3 bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
+        <q-dialog v-model="showChannels" v-if="isSmallScreen" seamless position="left" class="channel-dialog">
+          <q-card class="bg-yellow-1 q-pa-sm" style="width: 100%; max-width: 250px;">
+            <q-list bordered>
+              <q-item-label header>
+                <div class="row items-center">
+                  <span>Channels</span>
+                  <q-space />
+                  <q-btn flat round dense icon="more_vert">
+                    <q-menu>
+                      <q-list style="min-width: 150px;">
+                        <q-item clickable v-close-popup @click="channelFilter = 'all'">
+                          <q-item-section>All channels</q-item-section>
+                        </q-item>
+                        <q-item clickable v-close-popup @click="channelFilter = 'public'">
+                          <q-item-section>Public channels</q-item-section>
+                        </q-item>
+                        <q-item clickable v-close-popup @click="channelFilter = 'private'">
+                          <q-item-section>Private channels</q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
+                  </q-btn>
+                </div>
+              </q-item-label>
+
+            <!-- vytvorenie channel -->
+            <q-item clickable @click="showCreateChannelDialog = true" class="row reverse ">
+              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
+              <q-item-section>Create Channel</q-item-section>
+            </q-item>
+
+              <q-item
+                v-for="channel in filteredChannels"
+                :key="channel.id"
+                clickable
+                @click="selectChannel(channel)"
+                :active="activeChannel?.id === channel.id && !activeFriend"
+                active-class="bg-primary text-white"
+              >
+                <q-item-section>
+                  <div class="row items-center justify-between">
+                    <span>{{ channel.name }}</span>
+                    <q-icon v-if="channel.type === 'public'" class="material-symbols-outlined symbol">public</q-icon>
+                    <q-icon v-else class="material-symbols-outlined symbol">lock</q-icon>
+                  </div>
+                  <div v-if="channel.name === 'UniLife'" class="typing-indicator">
+                    <b class="typing-name text-caption text-grey-8">Milan is typing</b>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+        </q-dialog>
+
+        <!-- channels zoznam ako staticky panel na velkych obrazovkach -->
+        <div v-else-if="showChannels" class="col-auto bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
           <q-list bordered>
             <q-item-label header>
               <div class="row items-center">
@@ -103,13 +161,10 @@
                 </q-btn>
               </div>
             </q-item-label>
-
-            <!-- vytvorenie channel -->
             <q-item clickable @click="showCreateChannelDialog = true" class="row reverse ">
               <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
               <q-item-section>Create Channel</q-item-section>
             </q-item>
-
             <q-item
               v-for="channel in filteredChannels"
               :key="channel.id"
@@ -124,12 +179,7 @@
                   <q-icon v-if="channel.type === 'public'" class="material-symbols-outlined symbol">public</q-icon>
                   <q-icon v-else class="material-symbols-outlined symbol">lock</q-icon>
                 </div>
-
-                <!-- Milan píše pod názvom -->
-                <div
-                  v-if="channel.name === 'UniLife'"
-                  class="typing-indicator"
-                >
+                <div v-if="channel.name === 'UniLife'" class="typing-indicator">
                   <b class="typing-name text-caption text-grey-8">Milan is typing</b>
                   <span class="dot"></span>
                   <span class="dot"></span>
@@ -191,12 +241,7 @@
                       <q-item clickable v-close-popup @click="leaveChannel">
                         <q-item-section>Leave channel</q-item-section>
                       </q-item>
-                      <q-item
-                        clickable
-                        v-close-popup
-                        v-if="activeChannel?.isAdmin"
-                        @click="deleteChannel"
-                      >
+                      <q-item clickable v-close-popup v-if="activeChannel?.isAdmin" @click="deleteChannel">
                         <q-item-section class="text-negative">Delete channel</q-item-section>
                       </q-item>
                     </q-list>
@@ -217,9 +262,9 @@
             </div>
             <q-separator />
             <!-- messages -->
-              <div
-                ref="chatScrollBox"
-                class="q-pa-md"
+            <div
+              ref="chatScrollBox"
+              class="q-pa-md"
                 style="
                   flex: 1;
                   overflow-y: auto;
@@ -227,7 +272,7 @@
                   flex-direction: column;
                   max-height: 63vh;
                 ">
-                <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
+              <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
                 <q-spinner size="24px" color="primary" />
               </div>
               <div
@@ -260,11 +305,7 @@
             <div>Select a channel or friend to start chatting</div>
           </div>
           <!-- fixny riadok na pisanie -->
-          <div
-            class="column bg-grey-2"
-            style="position: sticky; bottom: 0; border-top: 1px solid #444;"
-          >
-            <!-- alerty nad inputom-->
+          <div class="column bg-grey-2" style="position: sticky; bottom: 0; border-top: 1px solid #444;">
             <div
               ref="alertBox"
               class="system-message"
@@ -276,14 +317,14 @@
                 color: #222;
               "
             >
-              {{systemMessage}}
+              {{ systemMessage }}
             </div>
             <!-- command line -->
             <div
                 class="row q-pa-sm bg-grey-2"
                 style="position: sticky; bottom: 0;"
             >
-                <q-input
+              <q-input
                 ref="cliInput"
                 v-model="newMessage"
                 placeholder="Enter a message or command"
@@ -292,8 +333,8 @@
                 dense
                 class="col"
                 @keyup.enter="sendMessage"
-                />
-                <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
+              />
+              <q-btn color="primary" label="Send" class="q-ml-sm" @click="sendMessage" />
             </div>
           </div>
         </div>
@@ -467,22 +508,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, watch } from 'vue'; // to onMounted je pouzite na notifikacie 
+import { ref, computed, nextTick, onMounted, watch } from 'vue';
+import { useQuasar } from 'quasar';
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
-interface Friend { 
-  id: number; 
-  name: string; 
-  avatar: string; 
+interface Friend {
+  id: number;
+  name: string;
+  avatar: string;
   status: UserStatus;
-  messages?: Message[]; 
+  messages?: Message[];
 }
-interface Message { id: number; user: string; text: string; }
-interface Channel { id: number; name: string; type: 'public' | 'private'; messages: Message[]; members?: number[]; isAdmin?: boolean; }
-interface Invitation { id: number; from: string; channel: string; }
+interface Message {
+  id: number;
+  user: string;
+  text: string;
+}
+interface Channel {
+  id: number;
+  name: string;
+  type: 'public' | 'private';
+  messages: Message[];
+  members?: number[];
+  isAdmin?: boolean;
+}
+interface Invitation {
+  id: number;
+  from: string;
+  channel: string;
+}
+
+// Quasar breakpoint
+const $q = useQuasar();
+const isSmallScreen = computed(() => $q.screen.lt.md); // lt.md je < 720px, upravíme na 700px v onMounted
 
 // Status options
 const statusOptions = [
@@ -494,15 +555,15 @@ const statusOptions = [
 // Aktuálny stav používateľa
 const userStatus = ref<UserStatus>('online');
 
-// zobrazenie channel listu
+// zobrazenie channel a friends listu
 const showChannels = ref(true);
+const showFriends = ref(false);
+
 const toggleChannels = () => {
   showChannels.value = !showChannels.value;
   if (showChannels.value) showFriends.value = false;
 };
 
-// ukazanie friends listu
-const showFriends = ref(false);
 const toggleFriends = () => {
   showFriends.value = !showFriends.value;
   if (showFriends.value) showChannels.value = false;
@@ -510,16 +571,16 @@ const toggleFriends = () => {
 
 const friends = ref<Friend[]>([
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
-  { 
-    id: 2, 
-    name: 'Katka', 
-    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', 
-    status: 'offline', 
+  {
+    id: 2,
+    name: 'Katka',
+    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg',
+    status: 'offline',
     messages: [
       { id: 1, user: 'Katka', text: 'Ahoj' },
       { id: 2, user: 'Katka', text: 'Nevieš kedy máme odovzdať VPWA?' },
       { id: 3, user: 'Katka', text: 'Neviem či stíham' },
-    ] 
+    ],
   },
   { id: 3, name: 'Kubo', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', status: 'dnd', messages: [] },
   { id: 4, name: 'Maggie', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'dnd', messages: [] },
@@ -551,18 +612,12 @@ const showCreateChannelDialog = ref(false);
 const showAddPeopleDialog = ref(false);
 const showRemovePeopleDialog = ref(false);
 const showStatusDialog = ref(false);
-const showMembersDialog = ref(false); // Nový dialog pre zoznam členov
+const showMembersDialog = ref(false);
 const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
-const channelMembers = computed(() => {
-  if (!activeChannel.value?.members) return [];
-  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id));
-});
-
-
-const dummyMessages = Array.from({ length: 40 }, (_, i) => ({ //tu mame 40 fixnych sprav medzi nami a Maggie na vyskusanie efektivneho scrollu
+const dummyMessages = Array.from({ length: 40 }, (_, i) => ({
   id: i + 1,
   user: i % 2 === 0 ? 'You' : 'Maggie',
   text: i % 2 === 0 ? `Tvoja správa ${i + 1}` : `Maggie odpoveď ${i + 1}`,
@@ -570,6 +625,12 @@ const dummyMessages = Array.from({ length: 40 }, (_, i) => ({ //tu mame 40 fixny
 
 const maggie = friends.value.find(f => f.name === 'Maggie');
 if (maggie) maggie.messages = dummyMessages;
+
+// Definícia channelMembers
+const channelMembers = computed(() => {
+  if (!activeChannel.value?.members) return [];
+  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id));
+});
 
 // tu je efektivny scroll
 const isLoadingMore = ref(false);
@@ -597,6 +658,7 @@ const selectChannel = (ch: Channel) => {
   } else {
     activeFriend.value = null;
     activeChannel.value = ch;
+    showChannels.value = false; // Skryje dialog alebo panel po výbere
   }
 };
 
@@ -606,6 +668,7 @@ const openFriendChat = (f: Friend) => {
   } else {
     activeChannel.value = null;
     activeFriend.value = f;
+    showFriends.value = false;
   }
 };
 
@@ -699,7 +762,8 @@ const deleteChannel = () => {
 
 const getChannelMembers = () => {
   if (!activeChannel.value?.members) return [];
-  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id))
+  return friends.value
+    .filter(f => activeChannel.value!.members!.includes(f.id))
     .map(f => ({ label: f.name, value: f.id }));
 };
 
@@ -712,9 +776,7 @@ const addPeopleToChannel = () => {
 
 const removePeopleFromChannel = () => {
   if (!activeChannel.value) return;
-  activeChannel.value.members = (activeChannel.value.members ?? []).filter(
-    id => !selectedFriends.value.includes(id)
-  );
+  activeChannel.value.members = (activeChannel.value.members ?? []).filter(id => !selectedFriends.value.includes(id));
   showRemovePeopleDialog.value = false;
   selectedFriends.value = [];
 };
@@ -754,6 +816,10 @@ const handleNotificationClose = () => {
 // spustame fixne notifikaciu pri kazdom reloadnuti stranky
 onMounted(() => {
   triggerChatNotification();
+  // Nastavenie showChannels na false pre obrazovky < 700px
+  if ($q.screen.width < 700) {
+    showChannels.value = false;
+  }
 
   const el = chatScrollBox.value;
   if (!el) return;
@@ -770,7 +836,30 @@ onMounted(() => {
   });
 });
 
-function sendMessage() {
+watch([activeFriend, activeChannel], async () => {
+  await nextTick();
+  const el = chatScrollBox.value;
+  if (!el) return;
+
+  el.onscroll = null;
+
+  el.addEventListener('scroll', () => {
+    if (el.scrollTop <= 100 && !isLoadingMore.value) {
+      const oldHeight = el.scrollHeight;
+      void (async () => {
+        await loadMoreMessages();
+        await nextTick();
+        el.scrollTop = el.scrollHeight - oldHeight;
+      })();
+    }
+  });
+  await nextTick();
+  if (chatScrollBox.value) {
+    chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
+  }
+});
+
+const sendMessage = () => {
   const text = newMessage.value.trim();
   if (!text) return;
 
@@ -829,35 +918,8 @@ function sendMessage() {
     systemMessage.value = "You are outside of channel";
   }
 
-  newMessage.value = "";
-}
-
-//watcher na sledovanie zmeny aktivneho chatu a nastavenie scroll listenera
-watch([activeFriend, activeChannel], async () => {
-  await nextTick();
-  const el = chatScrollBox.value;
-  if (!el) return;
-
-  // odpoj starý listener, aby sa nepridával duplicitne
-  el.onscroll = null;
-
-  el.addEventListener('scroll', () => {
-    if (el.scrollTop <= 100 && !isLoadingMore.value) {
-      const oldHeight = el.scrollHeight;
-      void (async () => {
-        await loadMoreMessages();
-        await nextTick();
-        el.scrollTop = el.scrollHeight - oldHeight;
-      })();
-    }
-  });
-  await nextTick();
-  if (chatScrollBox.value) {
-    chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
-  }
-
-});
-
+  newMessage.value = '';
+};
 </script>
 
 <style scoped>
@@ -865,7 +927,7 @@ watch([activeFriend, activeChannel], async () => {
 .relative-position { position: relative; }
 .command-input {
   font-family: monospace;
-  max-height: 150px; 
+  max-height: 150px;
   overflow-y: auto;
 }
 .message-container {
@@ -873,7 +935,7 @@ watch([activeFriend, activeChannel], async () => {
   border-radius: 4px;
 }
 .mention-message {
-  background-color: #9bc3ff; 
+  background-color: #9bc3ff;
 }
 .status-indicator {
   width: 12px;
@@ -889,10 +951,10 @@ watch([activeFriend, activeChannel], async () => {
   background-color: #4CAF50;
 }
 .status-dnd {
-  background-color: #F44336; 
+  background-color: #F44336;
 }
 .status-offline {
-  background-color: #9E9E9E; 
+  background-color: #9E9E9E;
 }
 .notification-wrapper {
   position: relative;
@@ -904,7 +966,7 @@ watch([activeFriend, activeChannel], async () => {
   right: 10px;
   z-index: 1000;
 }
-.row.justify-start.items-center.q-pa-md.bg-yellow-2 {
+.friends-list-content {
   z-index: 1;
 }
 .typing-indicator {
@@ -948,5 +1010,15 @@ watch([activeFriend, activeChannel], async () => {
 }
 .typing-text {
   color: #666;
+}
+
+/* pop up s channels zatvaraci */
+.channel-dialog .q-card {
+  left:100px;
+  top: 222px;
+  position: fixed;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 </style>
