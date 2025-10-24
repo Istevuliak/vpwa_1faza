@@ -30,7 +30,7 @@
     <!-- Hlavna cast chatu -->
     <div class="column col bg-white">
       <!-- Sekcia s freinds + notification -->
-      <q-card flat class="column justify-start items-center bg-yellow-2" style="height: 85px; flex-shrink: 0;">
+      <q-card flat class="column justify-start items-center bg-yellow-2" style="height: 105px; flex-shrink: 0;">
         <!-- freinds list -->
         <div class="notification-wrapper relative-position full-width">
           <q-scroll-area
@@ -331,7 +331,7 @@
       <q-card style="min-width: 400px;">
         <q-card-section><div class="text-h6">Create Channel</div></q-card-section>
         <q-card-section>
-          <q-input v-model="newChannelName" label="Channel name" outlined dense />
+          <q-input v-model="newChannelName" label="Channel name" outlined dense maxlength="20"/>
           <q-select
             v-model="selectedFriends"
             multiple

@@ -1,16 +1,12 @@
 <template>
   <q-layout view="lHh Rpr lFf">
-    <!-- HEADER -->
+    <!-- HEADER (unchanged) -->
     <q-header elevated>
       <q-toolbar>
-        <!-- alebo este CLIck je pekny nazov na command line -->
         <q-toolbar-title class="text-left">
           Shello
         </q-toolbar-title>
-
-        <!-- Ikony vpravo -->
         <div v-if="isChatPage" class="row items-center q-gutter-sm">
-          <!-- Ikona používateľa (otvára pravé menu) -->
           <div class="relative-position">
             <q-btn
               flat
@@ -19,24 +15,24 @@
               aria-label="User"
               @click="toggleRightDrawer"
             >
-              <q-icon class="material-symbols-outlined">account_circle</q-icon>
+              <ProfilePicture
+                :avatar="uploadedAvatar"
+                size="33px"
+                bgColor="grey-4"
+              />
             </q-btn>
             <q-badge color="red" floating transparent>{{ notifications.length }}</q-badge>
           </div>
-
-          <!-- Log out -->
           <q-btn color="dark" flat>
             <q-icon class="material-symbols-outlined q-mr-xs">logout</q-icon>
             Log out
-
-            <!-- menu as slot -->
             <q-menu v-model="showLogoutMenu" anchor="bottom right" self="top right" :offset="[0, 16]">
               <q-card style="min-width: 200px;">
                 <q-card-section class="text-center">
                   Do you want to log out?
                 </q-card-section>
                 <q-card-actions align="right">
-                  <q-btn flat label="Cancel" v-close-popup @click="showLogoutMenu = false" />
+                  <q-btn flat label="Cancel" color="black" v-close-popup />
                   <q-btn color="primary" label="Log out" @click="confirmLogout" />
                 </q-card-actions>
               </q-card>
@@ -57,34 +53,67 @@
           User Menu
         </q-item-label>
 
-        <!-- Položky z linksList ako q-item -->
+        <!-- Profile Item with Collapsible Section -->
+        <q-expansion-item
+          :model-value="profileExpanded"
+          @update:model-value="toggleProfile"
+          @click.stop
+          icon="person"
+          :label="`${userProfile.first_name} ${userProfile.last_name}`"
+          header-class="text-dark"
+          expand-icon-class="text-dark"
+        >
+          <q-card flat class="q-pa-md">
+            <q-card-section>
+              <div class="q-mt-sm">
+                <strong>Name:</strong> {{ userProfile.first_name }} {{ userProfile.last_name }}
+              </div>
+              <div>
+                <strong>Nickname:</strong> {{ userProfile.nickname }}
+              </div>
+              <div>
+                <strong>Email:</strong> {{ userProfile.email }}
+              </div>
+              <div>
+                <strong>Password:</strong> ********
+              </div>
+              <q-btn
+                flat
+                color="primary"
+                label="Edit"
+                class="q-mt-md"
+                style="display: flex; justify-self: flex-end;"
+                @click="editProfile"
+              />
+            </q-card-section>
+          </q-card>
+        </q-expansion-item>
+
+        <!-- Settings Item with q-menu -->
         <q-item
-          v-for="link in linksList"
-          :key="link.title"
           clickable
-          :to="link.link || undefined"
-          @click="handleLinkClick(link)"
+          @click.stop="openSettingsMenu"
+          class="text-dark"
         >
           <q-item-section avatar>
-            <q-icon :name="link.icon" class="primary" />
+            <q-icon name="settings" class="text-dark" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>{{ link.title }}</q-item-label>
-            <q-item-label caption>{{ link.caption }}</q-item-label>
+            <q-item-label>Settings</q-item-label>
+            <q-item-label caption>Account preferences</q-item-label>
           </q-item-section>
         </q-item>
 
-        <!-- Dropdown menu pre Profile (pridáme ho dynamicky cez slot alebo podmienku) -->
-        <q-menu v-if="profileMenuVisible" anchor="bottom left" self="top left">
+        <!-- Settings Dropdown Menu -->
+        <q-menu
+          v-model="settingsMenuVisible"
+          anchor="bottom middle"
+          self="top middle"
+          :offset="[0, 8]"
+        >
           <q-list style="min-width: 150px;">
-            <q-item clickable v-close-popup @click="showProfilePictureDialog = true">
-              <q-item-section>Set profile picture</q-item-section>
-            </q-item>
             <q-item clickable v-close-popup @click="showStatusDialog = true">
               <q-item-section>Statuses</q-item-section>
-            </q-item>
-            <q-item clickable v-close-popup @click="showChangePasswordDialog = true">
-              <q-item-section>Change password</q-item-section>
             </q-item>
             <q-item>
               <q-item-section>
@@ -100,6 +129,7 @@
           </q-list>
         </q-menu>
 
+        <!-- Notifications -->
         <q-item v-if="notifications.length > 0">
           <q-item-section>
             <div class="notification-message">
@@ -119,29 +149,6 @@
       </q-list>
     </q-drawer>
 
-    <!-- Dialóg pre nastavenie profilového obrázka -->
-    <q-dialog v-model="showProfilePictureDialog">
-      <q-card style="min-width: 300px;">
-        <q-card-section>
-          <div class="text-h6">Set Profile Picture</div>
-        </q-card-section>
-        <q-card-section>
-          <q-input
-            v-model="newProfilePicture"
-            label="Profile picture URL"
-            outlined
-            dense
-            autofocus
-          />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="black" v-close-popup />
-          <q-btn flat label="Save" color="primary" @click="saveProfilePicture" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- Dialóg pre nastavenie stavu -->
     <q-dialog v-model="showStatusDialog">
       <q-card style="min-width: 300px;">
         <q-card-section>
@@ -165,37 +172,6 @@
       </q-card>
     </q-dialog>
 
-    <!-- Dialóg pre zmenu hesla -->
-    <q-dialog v-model="showChangePasswordDialog">
-      <q-card style="min-width: 300px;">
-        <q-card-section>
-          <div class="text-h6">Change Password</div>
-        </q-card-section>
-        <q-card-section>
-          <q-input
-            v-model="oldPassword"
-            label="Old password"
-            type="password"
-            outlined
-            dense
-            class="q-mb-md"
-          />
-          <q-input
-            v-model="newPassword"
-            label="New password"
-            type="password"
-            outlined
-            dense
-          />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="black" v-close-popup />
-          <q-btn flat label="Save" color="primary" @click="changePassword" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- OBSAH -->
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -204,19 +180,31 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import ProfilePicture from '../components/ProfilePicture.vue';
 
-interface MenuLink {
-  title: string;
-  caption?: string;
-  icon?: string;
-  link?: string | undefined;
+const uploadedAvatar = ref<string | undefined>(undefined);
+
+interface UserProfile {
+  first_name: string;
+  last_name: string;
+  nickname: string;
+  email: string;
+  password: string;
 }
 
-// zistenie kde sa nachadzame
-import { useRoute } from 'vue-router';
+// Fixný user zatiaľ
+const userProfile = ref<UserProfile>({
+  first_name: 'Terezia',
+  last_name: 'Stevulova',
+  nickname: 'Ivanka',
+  email: 'tereza.stevulova@example.com',
+  password: 'securepassword123',
+});
+
+// Zistenie kde sa nachádzame
 const route = useRoute();
-const isChatPage = computed(() => route.path === '/chat'); 
+const isChatPage = computed(() => route.path === '/chat');
 
 const router = useRouter();
 
@@ -227,7 +215,7 @@ interface Notification {
 
 // Definícia notifikácií
 const notifications = ref<Notification[]>([
-  { message: 'Tento channel bol neaktívny 30 dní, rušíme ho' },
+  { message: 'This channel has been inactive for 30 days and will be removed.' },
 ]);
 
 // Možnosti stavu
@@ -241,90 +229,58 @@ const statusOptions = [
 // Aktuálny stav používateľa
 const userStatus = ref<UserStatus>('online');
 
-// Premenné pre dialógy
-const showProfilePictureDialog = ref(false);
+// Premenné pre dialógy a menu
 const showStatusDialog = ref(false);
-const showChangePasswordDialog = ref(false);
-const newProfilePicture = ref('');
-const oldPassword = ref('');
-const newPassword = ref('');
-
-// Premenná pre viditeľnosť dropdown menu pre Profile
-const profileMenuVisible = ref(false);
-
-const linksList: MenuLink[] = [
-  { 
-    title: 'Profile', 
-    caption: 'User details', 
-    icon: 'person',
-    link: undefined 
-  },
-  { title: 'Settings', caption: 'Account preferences', icon: 'settings', link: '#' },
-  { title: 'Help', caption: 'Get support', icon: 'help', link: '#' },
-];
-
 const rightDrawerOpen = ref(false);
 const showLogoutMenu = ref(false);
+const profileExpanded = ref(false);
+const settingsMenuVisible = ref(false);
+const notifyOnlyWhenTagged = ref(false);
 
-// Funkcia na spracovanie kliknutia na link
-function handleLinkClick(link: MenuLink) {
-  if (link.title === 'Profile') {
-    profileMenuVisible.value = true;
-  } 
-  // else {
-  //   // Pre ostatné linky normálna navigácia
-  //   if (link.link) {
-  //     router.push(link.link);
-  //   }
-  // }
+// Funkcia na prepínanie profilu
+function toggleProfile(value: boolean) {
+  profileExpanded.value = value;
+  settingsMenuVisible.value = false; // Ensure settings menu is closed
+}
+
+// Funkcia na otváranie settings menu
+function openSettingsMenu() {
+  console.log('Settings clicked, toggling menu'); // Debug log
+  settingsMenuVisible.value = !settingsMenuVisible.value;
+  profileExpanded.value = false; // Ensure profile is collapsed
+}
+
+// Funkcia na editovanie profilu
+function editProfile() {
+  console.log('Edit profile clicked');
+  // Tu sa môže otvoriť popup na zmenu
 }
 
 // Funkcia na zatvorenie notifikácie
 function dismissNotification() {
-  notifications.value.shift(); // Odstráni prvú notifikáciu
-}
-
-// Funkcia na uloženie profilového obrázka
-function saveProfilePicture() {
-  if (newProfilePicture.value.trim()) {
-    // Tu by sa uložil obrázok na server, momentálne len zatvoríme dialóg
-    console.log('Saving profile picture:', newProfilePicture.value);
-    newProfilePicture.value = '';
-    showProfilePictureDialog.value = false;
-  }
+  notifications.value.shift();
 }
 
 // Funkcia na uloženie stavu
 function saveUserStatus() {
-  // Tu by sa stav uložil na server, momentálne len zatvoríme dialóg
   console.log('Saving user status:', userStatus.value);
   showStatusDialog.value = false;
 }
 
-// Funkcia na zmenu hesla
-function changePassword() {
-  if (oldPassword.value && newPassword.value) {
-    // Tu by sa zavolalo API na zmenu hesla, momentálne len zatvoríme dialóg
-    console.log('Changing password from', oldPassword.value, 'to', newPassword.value);
-    oldPassword.value = '';
-    newPassword.value = '';
-    showChangePasswordDialog.value = false;
-  }
+// Funkcia na prepínanie notifikácií
+function handleNotifyToggle(value: boolean) {
+  console.log('Notify only when tagged:', value);
 }
 
+// Funkcia na odhlásenie
 async function confirmLogout() {
   showLogoutMenu.value = false;
   await router.push('/login');
 }
 
+// Funkcia na prepínanie pravého menu
 function toggleRightDrawer() {
   rightDrawerOpen.value = !rightDrawerOpen.value;
-}
-const notifyOnlyWhenTagged = ref(false);
-
-function handleNotifyToggle(value: boolean) {
-  console.log('Notify only when tagged:', value);
-  // nejaky backend uz
 }
 </script>
 
@@ -339,16 +295,21 @@ function handleNotifyToggle(value: boolean) {
 }
 
 .q-toolbar {
-  color: #000; /* Čierny text pre lepší kontrast */
+  color: #000;
 }
 
 .notification-message {
-  background-color: #F44336; /* Červené pozadie */
-  color: #000; /* Čierny text */
+  background-color: #F44336;
+  color: #000;
   padding: 8px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
+.text-dark {
+  color: #424242 !important;
+}
+
 </style>
