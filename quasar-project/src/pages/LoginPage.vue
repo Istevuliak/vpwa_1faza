@@ -75,7 +75,7 @@ const router = useRouter();
 
 const login = () => {
   // tu sa vola API potom
-  void router.push('/chat'); // presmerovanie po prihlaseni, toto este nemame, treba spravit ChatPAge.vue
+  void router.push('/chat'); // presmerovanie po prihlaseni
 };
 
 const goToRegister = () => {
