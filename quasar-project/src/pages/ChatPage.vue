@@ -93,33 +93,17 @@
         />
 
         <!-- friends zoznam -->
-        <div v-if="showFriends" class="col-3 bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
-          <q-list bordered>
-            <q-item-label header>Friends</q-item-label>
-            <q-item
-              v-for="friend in friends"
-              :key="friend.id"
-              clickable
-              @click="openFriendChat(friend)"
-              :active="activeFriend?.id === friend.id"
-              active-class="bg-primary text-white"
-            >
-              <div class="relative-position q-mr-sm">
-                <ProfilePicture
-                  :avatar="friend.avatar"
-                  size="50px"
-                  bgColor="grey-3"
-                />
-                <div class="status-indicator" :class="`status-${friend.status}`"></div>
-              </div>
-              <q-item-section>{{ friend.name }}</q-item-section>
-            </q-item>
-            <q-item clickable @click="showAddFriendDialog = true">
-              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
-              <q-item-section>Add friends</q-item-section>
-            </q-item>
-          </q-list>
-        </div>
+        <!-- pouzijeme nas komponent FriendListSide -->
+        <FriendsListSide
+          :show-friends="showFriends"
+          :is-small-screen="isSmallScreen"
+          :friends="filteredFriends"
+          :active-friend="activeFriend"
+          @update:show-friends="showFriends = $event"
+          @update:friend-filter="friendFilter = $event" 
+          @select-friend="openFriendChat"
+          @open-add-friend-dialog="showAddFriendDialog = true"
+        />
 
         <!-- chatting -->
         <div class="column relative-position" style="flex: 1;">
@@ -415,6 +399,7 @@ import { useQuasar } from 'quasar';
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
 import ChannelListSide from '../components/ChannelListSide.vue';
+import FriendsListSide from '../components/FriendsListSide.vue';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
@@ -460,7 +445,7 @@ const userStatus = ref<UserStatus>('online');
 
 // zobrazenie channel a friends listu
 const showChannels = ref(true);
-const showFriends = ref(false);
+const showFriends = ref(true);
 
 const toggleChannels = () => {
   showChannels.value = !showChannels.value;
@@ -574,7 +559,9 @@ const openFriendChat = (f: Friend) => {
   } else {
     activeChannel.value = null;
     activeFriend.value = f;
-    showFriends.value = false;
+    if (isSmallScreen.value){
+      showFriends.value = false;
+    }
   }
 };
 
@@ -620,12 +607,19 @@ const acceptInvite = (id: number) => {
 };
 const declineInvite = (id: number) => (invitations.value = invitations.value.filter(i => i.id !== id));
 
+// na filtrovanie v tych side baroch channel a friends 
 const channelFilter = ref<'all' | 'public' | 'private'>('all');
-
 const filteredChannels = computed(() => {
   if (channelFilter.value === 'all') return channels.value;
   return channels.value.filter(ch => ch.type === channelFilter.value);
 });
+
+const friendFilter = ref<'all' | 'online' | 'offline' |'dnd'>('all');
+const filteredFriends = computed(() => {
+  if (friendFilter.value === 'all') return friends.value;
+  return friends.value.filter(f => f.status === friendFilter.value);
+});
+
 
 const createChannel = () => {
   const name = newChannelName.value.trim();
@@ -725,6 +719,7 @@ onMounted(() => {
   // Nastavenie showChannels na false pre obrazovky < 700px
   if (isSmallScreen.value) {
     showChannels.value = false;
+    showFriends.value = false;
   }
 
   const el = chatScrollBox.value;
