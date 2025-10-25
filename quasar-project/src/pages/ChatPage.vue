@@ -445,7 +445,7 @@ const userStatus = ref<UserStatus>('online');
 
 // zobrazenie channel a friends listu
 const showChannels = ref(true);
-const showFriends = ref(true);
+const showFriends = ref(false);
 
 const toggleChannels = () => {
   showChannels.value = !showChannels.value;

@@ -149,15 +149,15 @@ const emit = defineEmits<{
   (e: 'openCreateChannelDialog'): void;
 }>();
 
-// Lokálna kópia pre v-model v dialogu (pre dvojsmernú väzbu)
+// lokalna kopia pre v-model v dialogu lebo v-model nefunguje 
 const localShowChannels = ref(props.showChannels);
 
-// Sync s props (ak sa zmení zvonku)
+// sync s props , ak je zmena v props
 watch(() => props.showChannels, (newVal) => {
   localShowChannels.value = newVal;
 });
 
-// Emit zmeny späť (napr. keď užívateľ zatvorí dialog manuálne)
+// emit zmeny spat napr. ked pouzivatel zatvori dialog manualne
 watch(localShowChannels, (newVal) => {
   emit('update:showChannels', newVal);
 });
@@ -173,7 +173,6 @@ watch(localShowChannels, (newVal) => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Štýly pre typing indicator */
 .typing-indicator {
   display: flex;
   align-items: center;
@@ -198,9 +197,7 @@ watch(localShowChannels, (newVal) => {
   animation-delay: 0.4s;
 }
 @keyframes blink {
-  0%,
-  80%,
-  100% {
+  0%, 80%, 100% {
     opacity: 0.3;
   }
   40% {

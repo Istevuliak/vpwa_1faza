@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Rpr lFf">
-    <!-- HEADER (unchanged) -->
+    <!-- HEADER  -->
     <q-header elevated>
       <q-toolbar>
         <q-toolbar-title class="text-left">
@@ -42,7 +42,7 @@
       </q-toolbar>
     </q-header>
 
-    <!-- PRAVÉ MENU (Drawer) -->
+    <!-- prave menu -->
     <q-drawer
       side="right"
       v-model="rightDrawerOpen"
@@ -53,7 +53,7 @@
           User Menu
         </q-item-label>
 
-        <!-- Profile Item with Collapsible Section -->
+        <!-- profile a ked nanho kliknem tak sa rozbali -->
         <q-expansion-item
           :model-value="profileExpanded"
           @update:model-value="toggleProfile"
@@ -89,7 +89,7 @@
           </q-card>
         </q-expansion-item>
 
-        <!-- Settings Item with q-menu -->
+        <!-- setting item -->
         <q-item
           clickable
           @click.stop="openSettingsMenu"
@@ -104,7 +104,7 @@
           </q-item-section>
         </q-item>
 
-        <!-- Settings Dropdown Menu -->
+        <!-- setting dropdown menu -->
         <q-menu
           v-model="settingsMenuVisible"
           anchor="bottom middle"
@@ -129,7 +129,7 @@
           </q-list>
         </q-menu>
 
-        <!-- Notifications -->
+        <!-- notifikacie -->
         <q-item v-if="notifications.length > 0">
           <q-item-section>
             <div class="notification-message">
@@ -149,6 +149,7 @@
       </q-list>
     </q-drawer>
 
+    <!-- status -->
     <q-dialog v-model="showStatusDialog">
       <q-card style="min-width: 300px;">
         <q-card-section>
@@ -193,7 +194,7 @@ interface UserProfile {
   password: string;
 }
 
-// Fixný user zatiaľ
+// fixny user zatial
 const userProfile = ref<UserProfile>({
   first_name: 'Terezia',
   last_name: 'Stevulova',
@@ -202,23 +203,21 @@ const userProfile = ref<UserProfile>({
   password: 'securepassword123',
 });
 
-// Zistenie kde sa nachádzame
+// zistenie, kde sme
 const route = useRoute();
 const isChatPage = computed(() => route.path === '/chat');
 
 const router = useRouter();
 
-// Definícia rozhrania pre notifikácie
 interface Notification {
   message: string;
 }
 
-// Definícia notifikácií
 const notifications = ref<Notification[]>([
   { message: 'This channel has been inactive for 30 days and will be removed.' },
 ]);
 
-// Možnosti stavu
+// statusy
 type UserStatus = 'online' | 'dnd' | 'offline';
 const statusOptions = [
   { label: 'Online', value: 'online' as const },
@@ -226,10 +225,9 @@ const statusOptions = [
   { label: 'Offline', value: 'offline' as const },
 ];
 
-// Aktuálny stav používateľa
+// aktualny status pouzivatela
 const userStatus = ref<UserStatus>('online');
 
-// Premenné pre dialógy a menu
 const showStatusDialog = ref(false);
 const rightDrawerOpen = ref(false);
 const showLogoutMenu = ref(false);
@@ -237,48 +235,44 @@ const profileExpanded = ref(false);
 const settingsMenuVisible = ref(false);
 const notifyOnlyWhenTagged = ref(false);
 
-// Funkcia na prepínanie profilu
+// funk na prepinanie profilu
 function toggleProfile(value: boolean) {
   profileExpanded.value = value;
-  settingsMenuVisible.value = false; // Ensure settings menu is closed
+  settingsMenuVisible.value = false;
 }
 
-// Funkcia na otváranie settings menu
+// funk. na otvaranie settings menu
 function openSettingsMenu() {
-  console.log('Settings clicked, toggling menu'); // Debug log
+  console.log('Settings clicked, toggling menu'); 
   settingsMenuVisible.value = !settingsMenuVisible.value;
-  profileExpanded.value = false; // Ensure profile is collapsed
+  profileExpanded.value = false; 
 }
 
-// Funkcia na editovanie profilu
+// funk. na editovanie profilu
 function editProfile() {
   console.log('Edit profile clicked');
-  // Tu sa môže otvoriť popup na zmenu
+  // tu by sme mohli vymysliet este nejaky popup dialog
 }
 
-// Funkcia na zatvorenie notifikácie
 function dismissNotification() {
   notifications.value.shift();
 }
 
-// Funkcia na uloženie stavu
 function saveUserStatus() {
   console.log('Saving user status:', userStatus.value);
   showStatusDialog.value = false;
 }
 
-// Funkcia na prepínanie notifikácií
+// prepinanie notifikacii
 function handleNotifyToggle(value: boolean) {
   console.log('Notify only when tagged:', value);
 }
-
-// Funkcia na odhlásenie
+//logout
 async function confirmLogout() {
   showLogoutMenu.value = false;
   await router.push('/login');
 }
 
-// Funkcia na prepínanie pravého menu
 function toggleRightDrawer() {
   rightDrawerOpen.value = !rightDrawerOpen.value;
 }

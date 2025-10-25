@@ -138,15 +138,15 @@ const emit = defineEmits<{
   (e: 'openAddFriendDialog'): void;
 }>();
 
-// Lokálna kópia pre v-model v dialogu
+// lokalna kopia  pre v-model v dialogu
 const localShowFriends = ref(props.showFriends);
 
-// Sync s props
+// sync s props
 watch(() => props.showFriends, (newVal) => {
   localShowFriends.value = newVal;
 });
 
-// Emit zmeny spat
+// emit zmeny spat
 watch(localShowFriends, (newVal) => {
   emit('update:showFriends', newVal);
 });

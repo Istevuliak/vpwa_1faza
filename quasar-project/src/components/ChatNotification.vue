@@ -46,22 +46,19 @@ const truncatedMessage = computed(() => {
   return props.message;
 });
 
-// Funkcia na zobrazenie notifikácie
 const showNotification = () => {
   show.value = true;
   
-  // Zrušíme existujúci timeout, ak existuje
+  // ak je timeout, tak sa vycisti
   if (timeoutId) {
     clearTimeout(timeoutId);
   }
-  
-  // Nastavíme nový timeout
+  // setneme novy timeout na zatvaranie 
   timeoutId = setTimeout(() => {
     closeNotification();
   }, props.duration);
 };
 
-// Funkcia na zatvorenie notifikácie
 const closeNotification = () => {
   show.value = false;
   if (timeoutId) {
@@ -71,12 +68,12 @@ const closeNotification = () => {
   emit('close');
 };
 
-// Automaticky zobrazíme notifikáciu pri mountingu
+// automaticky sa zobrazi notif pri mountingu
 onMounted(() => {
   showNotification();
 });
 
-// Vyčistíme timeout pri unmountingu
+// clear timeout pri unmountingu
 onUnmounted(() => {
   if (timeoutId) {
     clearTimeout(timeoutId);
@@ -88,7 +85,7 @@ onUnmounted(() => {
 .notification-container {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #026b0b 0%, #104400 100%);
+  background: #769e89;
   color: white;
   border-radius: 12px;
   padding: 12px 16px;

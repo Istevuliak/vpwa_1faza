@@ -136,7 +136,6 @@ const register = async () => {
   await router.push('/login');
 };
 
-// Profile picture
 import ProfilePicture from '../components/ProfilePicture.vue';
 
 const uploadedAvatar = ref<string | undefined>(undefined);
