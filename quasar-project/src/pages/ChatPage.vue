@@ -79,116 +79,18 @@
       </q-card>
       <!-- hlavna chatova cast -->
       <div class="row col">
-        <!-- channels zoznams -->
-        <q-dialog v-model="showChannels" v-if="isSmallScreen" seamless position="left" class="channel-dialog">
-          <q-card class="bg-yellow-1 q-pa-sm" style="width: 100%; max-width: 250px;">
-            <q-list bordered>
-              <q-item-label header>
-                <div class="row items-center">
-                  <span>Channels</span>
-                  <q-space />
-                  <q-btn flat round dense icon="more_vert">
-                    <q-menu>
-                      <q-list style="min-width: 150px;">
-                        <q-item clickable v-close-popup @click="channelFilter = 'all'">
-                          <q-item-section>All channels</q-item-section>
-                        </q-item>
-                        <q-item clickable v-close-popup @click="channelFilter = 'public'">
-                          <q-item-section>Public channels</q-item-section>
-                        </q-item>
-                        <q-item clickable v-close-popup @click="channelFilter = 'private'">
-                          <q-item-section>Private channels</q-item-section>
-                        </q-item>
-                      </q-list>
-                    </q-menu>
-                  </q-btn>
-                </div>
-              </q-item-label>
-
-            <!-- vytvorenie channel -->
-            <q-item clickable @click="showCreateChannelDialog = true" class="row reverse ">
-              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
-              <q-item-section>Create Channel</q-item-section>
-            </q-item>
-
-              <q-item
-                v-for="channel in filteredChannels"
-                :key="channel.id"
-                clickable
-                @click="selectChannel(channel)"
-                :active="activeChannel?.id === channel.id && !activeFriend"
-                active-class="bg-primary text-white"
-              >
-                <q-item-section>
-                  <div class="row items-center justify-between">
-                    <span>{{ channel.name }}</span>
-                    <q-icon v-if="channel.type === 'public'" class="material-symbols-outlined symbol">public</q-icon>
-                    <q-icon v-else class="material-symbols-outlined symbol">lock</q-icon>
-                  </div>
-                  <div v-if="channel.name === 'UniLife'" class="typing-indicator">
-                    <b class="typing-name text-caption text-grey-8">Milan is typing</b>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card>
-        </q-dialog>
-
-        <!-- channels zoznam ako staticky panel na velkych obrazovkach -->
-        <div v-else-if="showChannels" class="col-auto bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
-          <q-list bordered>
-            <q-item-label header>
-              <div class="row items-center">
-                <span>Channels</span>
-                <q-space />
-                <q-btn flat round dense icon="more_vert">
-                  <q-menu>
-                    <q-list style="min-width: 150px;">
-                      <q-item clickable v-close-popup @click="channelFilter = 'all'">
-                        <q-item-section>All channels</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="channelFilter = 'public'">
-                        <q-item-section>Public channels</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="channelFilter = 'private'">
-                        <q-item-section>Private channels</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-              </div>
-            </q-item-label>
-            <q-item clickable @click="showCreateChannelDialog = true" class="row reverse ">
-              <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
-              <q-item-section>Create Channel</q-item-section>
-            </q-item>
-            <q-item
-              v-for="channel in filteredChannels"
-              :key="channel.id"
-              clickable
-              @click="selectChannel(channel)"
-              :active="activeChannel?.id === channel.id && !activeFriend"
-              active-class="bg-primary text-white"
-            >
-              <q-item-section>
-                <div class="row items-center justify-between">
-                  <span>{{ channel.name }}</span>
-                  <q-icon v-if="channel.type === 'public'" class="material-symbols-outlined symbol">public</q-icon>
-                  <q-icon v-else class="material-symbols-outlined symbol">lock</q-icon>
-                </div>
-                <div v-if="channel.name === 'UniLife'" class="typing-indicator">
-                  <b class="typing-name text-caption text-grey-8">Milan is typing</b>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </div>
+        <!-- pouzijeme nas komponenet ChannelListSide -->
+        <ChannelListSide
+          :show-channels="showChannels"
+          :is-small-screen="isSmallScreen"
+          :channels="filteredChannels"
+          :active-channel="activeChannel"
+          :active-friend="activeFriend"
+          @update:show-channels="showChannels = $event"
+          @update:channel-filter="channelFilter = $event"
+          @select-channel="selectChannel"
+          @open-create-channel-dialog="showCreateChannelDialog = true"
+        />
 
         <!-- friends zoznam -->
         <div v-if="showFriends" class="col-3 bg-yellow-1 q-pa-sm" style="width: 250px; flex-shrink: 0;">
@@ -512,6 +414,7 @@ import { ref, computed, nextTick, onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
+import ChannelListSide from '../components/ChannelListSide.vue';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
@@ -543,7 +446,7 @@ interface Invitation {
 
 // Quasar breakpoint
 const $q = useQuasar();
-const isSmallScreen = computed(() => $q.screen.lt.md); // lt.md je < 720px, upravíme na 700px v onMounted
+const isSmallScreen = computed(() => $q.screen.width < 700);
 
 // Status options
 const statusOptions = [
@@ -658,7 +561,10 @@ const selectChannel = (ch: Channel) => {
   } else {
     activeFriend.value = null;
     activeChannel.value = ch;
-    showChannels.value = false; // Skryje dialog alebo panel po výbere
+    // skryt side panel len na malych obrazovkach
+    if (isSmallScreen.value) {
+      showChannels.value = false;
+    } 
   }
 };
 
@@ -817,7 +723,7 @@ const handleNotificationClose = () => {
 onMounted(() => {
   triggerChatNotification();
   // Nastavenie showChannels na false pre obrazovky < 700px
-  if ($q.screen.width < 700) {
+  if (isSmallScreen.value) {
     showChannels.value = false;
   }
 
@@ -893,7 +799,7 @@ const sendMessage = () => {
       }
     } else if (command === "list") {
       if (activeChannel.value) {
-        showMembersDialog.value = true; // Zobrazí dialog so zoznamom členov
+        showMembersDialog.value = true;
       } else {
         systemMessage.value = "No channel selected";
       }
@@ -969,33 +875,6 @@ const sendMessage = () => {
 .friends-list-content {
   z-index: 1;
 }
-.typing-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 4px 4px;
-  gap: 3px;
-}
-.typing-name {
-  margin-right: 4px;
-}
-.dot {
-  width: 4px;
-  height: 4px;
-  background-color: #999;
-  border-radius: 50%;
-  animation: blink 1.2s infinite ease-in-out;
-}
-.dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0.3; }
-  40% { opacity: 1; }
-}
 .typing-message {
   position: absolute;
   bottom: 100px;
@@ -1012,13 +891,4 @@ const sendMessage = () => {
   color: #666;
 }
 
-/* pop up s channels zatvaraci */
-.channel-dialog .q-card {
-  left:100px;
-  top: 222px;
-  position: fixed;
-  max-height: 300px;
-  overflow-y: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
 </style>
