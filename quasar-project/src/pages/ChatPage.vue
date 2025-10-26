@@ -1,12 +1,14 @@
 <template>
   <q-page class="row no-wrap bg-secondary">
     <!-- Sidebar na lavo -->
-    <div class="column items-center bg-secondary q-pa-md" style="width: 100px;">
+    <div class="column items-center bg-secondary q-pa-md" 
+    :style="{ width: sidebarWidth }">
       <q-btn
         flat
         round
         icon="chat"
         :color="showFriends ? 'bg-yellow-8' : 'primary'"
+        :size="iconSize"
         class="q-mb-md"
         title="Chats"
         @click="toggleFriends"
@@ -16,13 +18,14 @@
         round
         icon="groups"
         :color="showChannels ? 'black' : 'primary'"
+        :size="iconSize"
         class="q-mb-md"
         title="Channels"
         @click="toggleChannels"
       />
       <!-- Invitations -->
       <div class="relative-position q-mb-md">
-        <q-btn flat round icon="mail" color="primary" title="Invitations" @click="openInvitations" />
+        <q-btn flat round icon="mail" color="primary" :size="iconSize" title="Invitations" @click="openInvitations" />
         <q-badge v-if="invitationCount > 0" color="red" floating transparent>{{ invitationCount }}</q-badge>
       </div>
     </div>
@@ -432,6 +435,24 @@ interface Invitation {
 // Quasar breakpoint
 const $q = useQuasar();
 const isSmallScreen = computed(() => $q.screen.width < 700);
+
+// responzivny lavy sidebar width
+const sidebarWidth = computed(() => {
+  if ($q.screen.xl) return '120px';
+  if ($q.screen.lg) return '100px';
+  if ($q.screen.md) return '80px';
+  if ($q.screen.sm) return '80px';
+  return '60px';
+});
+
+// responzivna velkost ikon sidebar quasar velkosti
+const iconSize = computed(() => {
+  if ($q.screen.xl) return 'xl'; 
+  if ($q.screen.lg) return 'lg'; 
+  if ($q.screen.md) return 'md'; 
+  if ($q.screen.sm) return 'md'; 
+  return 'sm'; 
+});
 
 // Status options
 const statusOptions = [
@@ -885,5 +906,4 @@ const sendMessage = () => {
 .typing-text {
   color: #666;
 }
-
 </style>

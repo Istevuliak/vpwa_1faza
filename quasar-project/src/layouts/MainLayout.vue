@@ -47,12 +47,18 @@
       side="right"
       v-model="rightDrawerOpen"
       bordered
+      overlay
+      :width="drawerWidth"
     >
-      <q-list>
-        <q-item-label header>
-          User Menu
-        </q-item-label>
+      <q-item class="row items-center justify-between">
+          <q-item-label header>
+            User Menu
+          </q-item-label>
+          <q-btn flat icon="close" size="sm" @click="rightDrawerOpen = false">
+          </q-btn>
+        </q-item>
 
+      <q-list>
         <!-- profile a ked nanho kliknem tak sa rozbali -->
         <q-expansion-item
           :model-value="profileExpanded"
@@ -183,6 +189,19 @@
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import ProfilePicture from '../components/ProfilePicture.vue';
+import { useQuasar } from 'quasar';
+
+// responzivny sidebar sirka
+
+const $q = useQuasar()
+
+const drawerWidth = computed(() => {
+  if ($q.screen.xs) {
+    return $q.screen.width //vrati celu sirku
+  }
+  return 350
+})
+
 
 const uploadedAvatar = ref<string | undefined>(undefined);
 
@@ -234,6 +253,7 @@ const showLogoutMenu = ref(false);
 const profileExpanded = ref(false);
 const settingsMenuVisible = ref(false);
 const notifyOnlyWhenTagged = ref(false);
+
 
 // funk na prepinanie profilu
 function toggleProfile(value: boolean) {
