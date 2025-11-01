@@ -231,7 +231,7 @@
     </div>
 
     <!-- dialogy -->
-    <q-dialog v-model="showAddFriendDialog" persistent>
+    <q-dialog v-model="showAddFriendDialog">
       <q-card style="min-width: 300px;">
         <q-card-section><div class="text-h6">Add new friend</div></q-card-section>
         <q-card-section><q-input v-model="newFriendName" label="Friend name" outlined dense autofocus /></q-card-section>
@@ -264,7 +264,7 @@
       <q-card style="min-width: 400px;">
         <q-card-section><div class="text-h6">Create Channel</div></q-card-section>
         <q-card-section>
-          <q-input v-model="newChannelName" label="Channel name" outlined dense maxlength="20"/>
+          <q-input v-model="newChannelName" label="Channel name" outlined dense maxlength="20" autofocus />
           <q-select
             v-model="selectedFriends"
             multiple
@@ -288,8 +288,8 @@
           />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="black" v-close-popup />
-          <q-btn flat label="Create" color="primary" @click="createChannel" />
+          <q-btn flat label="Cancel" color="black" v-close-popup/>
+          <q-btn flat label="Create" color="primary" @click="createChannel"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -331,8 +331,8 @@
           />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="secondary" v-close-popup />
-          <q-btn flat label="Remove" color="negative" @click="removePeopleFromChannel" />
+          <q-btn flat label="Cancel" color="black" v-close-popup />
+          <q-btn flat label="Remove" color="primary" @click="removePeopleFromChannel" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -372,14 +372,16 @@
             <q-item v-for="member in channelMembers" :key="member.id">
               <q-item-section>
                 <div class="row items-center">
-                  <ProfilePicture
-                    :avatar="member.avatar"
-                    size="40px"
-                    bgColor="grey-3"
-                    class="q-mr-sm"
-                  />
+                  <div class="relative-position">
+                    <ProfilePicture
+                      :avatar="member.avatar"
+                      size="40px"
+                      bgColor="grey-3"
+                      class="q-mr-sm"
+                    />
+                    <div class="status-indicator q-ml-sm" :class="`status-${member.status}`"></div>
+                  </div>
                   <span>{{ member.name }}</span>
-                  <div class="status-indicator q-ml-sm" :class="`status-${member.status}`"></div>
                 </div>
               </q-item-section>
             </q-item>
@@ -590,6 +592,7 @@ const addFriend = () => {
   const name = newFriendName.value.trim();
   if (!name) return;
   const nicknameExists = friends.value.some(f => f.name.toLowerCase() === name.toLowerCase());
+  activeChannel.value = null;
   if (nicknameExists) {
     alert('You are already friends with this person!');
     return;
@@ -646,7 +649,8 @@ const createChannel = () => {
   const name = newChannelName.value.trim();
   if (!name) return;
 
-  const nameExists = channels.value.some(ch => ch.name.toLowerCase() === name.toLowerCase());
+  const nameExists = channels.value.some(ch => ch.name.toLowerCase() === name.toLowerCase())
+  activeFriend.value = null
   if (nameExists) {
     alert('Channel name already exists!');
     return;
@@ -779,7 +783,25 @@ watch([activeFriend, activeChannel], async () => {
   if (chatScrollBox.value) {
     chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
   }
-});
+  loadedMessagesCount.value = 20; // vždy začni s 20 správami
+  isLoadingMore.value = false;
+  }, { immediate: true }
+); 
+
+// aby sa nam input na vytvorenie channel resetoval po kliknuti na cencel alebo mimo dialogu
+watch(showCreateChannelDialog,(newVal) => {
+  if (!newVal) {
+    newChannelName.value = ''
+    selectedFriends.value = []
+    newChannelType.value = 'public'
+  }}
+)
+// aby sa nam input na pridanie friend resetoval po kliknuti na cencel alebo mimo dialogu
+watch(showAddFriendDialog,(newVal) => {
+  if (!newVal) {
+    newFriendName.value = ''
+  }}
+)
 
 const sendMessage = () => {
   const text = newMessage.value.trim();
@@ -823,6 +845,7 @@ const sendMessage = () => {
       systemMessage.value = "Unknown command: " + text;
     }
   } else if (activeFriend.value || activeChannel.value) {
+    systemMessage.value = '';
     const target = activeFriend.value ?? activeChannel.value;
     if (target?.messages) {
       target.messages.push({
@@ -839,7 +862,6 @@ const sendMessage = () => {
   } else {
     systemMessage.value = "You are outside of channel";
   }
-
   newMessage.value = '';
 };
 </script>
