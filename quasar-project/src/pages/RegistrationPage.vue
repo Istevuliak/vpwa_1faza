@@ -6,7 +6,8 @@
           class="q-pa-md q-gutter-y-md"
           style="width: 400px;"
         >
-          <div class="block text-h6 q-mb-lg text-center"></div>
+          <div class="block text-h6 q-mb-lg text-left">Register</div>
+          <!-- <div class="text-h6 q-mb-lg">Register</div>  -->
           <div class="profile-wrapper column items-center q-mb-md">
             <ProfilePicture
               :avatar="uploadedAvatar"
@@ -21,7 +22,7 @@
               label="add profile picture"
               @click="triggerFileInput"
             />
-
+            
             <input
               type="file"
               ref="fileInput"
