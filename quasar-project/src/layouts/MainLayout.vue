@@ -51,12 +51,12 @@
       :width="drawerWidth"
     >
       <q-item class="row items-center justify-between">
-          <q-item-label header>
-            User Menu
-          </q-item-label>
-          <q-btn flat icon="close" size="sm" @click="rightDrawerOpen = false">
-          </q-btn>
-        </q-item>
+        <q-item-label header>
+          User Menu
+        </q-item-label>
+        <q-btn flat icon="close" size="sm" @click="rightDrawerOpen = false">
+        </q-btn>
+      </q-item>
 
       <q-list>
         <!-- profile a ked nanho kliknem tak sa rozbali -->
