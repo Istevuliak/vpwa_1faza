@@ -6,16 +6,6 @@
       <q-btn
         flat
         round
-        icon="chat"
-        :color="showFriends ? 'bg-yellow-8' : 'primary'"
-        :size="iconSize"
-        class="q-mb-md"
-        title="Chats"
-        @click="toggleFriends"
-      />
-      <q-btn
-        flat
-        round
         icon="groups"
         :color="showChannels ? 'black' : 'primary'"
         :size="iconSize"
@@ -32,54 +22,16 @@
 
     <!-- Hlavna cast chatu -->
     <div class="column col bg-white">
-      <!-- Sekcia s freinds + notification -->
-      <q-card flat class="column justify-start items-center bg-yellow-2" style="height: 105px; flex-shrink: 0;">
-        <!-- freinds list -->
-        <div class="notification-wrapper relative-position full-width">
-          <q-scroll-area
-            class="full-width"
-            style="height: 105px;"
-            horizontal
-          >
-            <div class="row no-wrap justify-start items-center q-pa-md bg-yellow-2 friends-list-content">
-              <div class="column items-center justify-center cursor-pointer friend-item" @click="showAddFriendDialog = true" style="width: 70px; flex-shrink: 0;">
-                <q-avatar size="50px" color="yellow-8" text-color="black">
-                  <q-icon name="add" />
-                </q-avatar>
-                <div class="text-caption text-center">Add friends</div>
-              </div>
-              <div
-                v-for="friend in friends"
-                :key="friend.id"
-                class="column items-center cursor-pointer friend-item"
-                style="width: 70px; flex-shrink: 0;"
-                @click="openFriendChat(friend)"
-              >
-                <div class="relative-position">
-                  <ProfilePicture
-                    :avatar="friend.avatar"
-                    size="50px"
-                    bgColor="grey-3"
-                  />
-                  <div class="status-indicator" :class="`status-${friend.status}`"></div>
-                </div>
-                <div class="text-caption ellipsis text-center" style="width: 70px;">{{ friend.name }}</div>
-              </div>
-              
-            </div>
-          </q-scroll-area>
-          <div class="notification-positioner">
-            <ChatNotification
-              v-if="showChatNotification"
-              :sender-name="notificationData.senderName"
-              :sender-avatar="notificationData.senderAvatar"
-              :message="notificationData.message"
-              :duration="4000"
-              @close="handleNotificationClose"
-            />
-          </div>
-        </div>
-      </q-card>
+      <div class="notification-positioner">
+        <ChatNotification
+          v-if="showChatNotification"
+          :sender-name="notificationData.senderName"
+          :sender-avatar="notificationData.senderAvatar"
+          :message="notificationData.message"
+          :duration="4000"
+          @close="handleNotificationClose"
+        />
+      </div>
       <!-- hlavna chatova cast -->
       <div class="row col">
         <!-- pouzijeme nas komponenet ChannelListSide -->
@@ -88,33 +40,18 @@
           :is-small-screen="isSmallScreen"
           :channels="filteredChannels"
           :active-channel="activeChannel"
-          :active-friend="activeFriend"
           @update:show-channels="showChannels = $event"
           @update:channel-filter="channelFilter = $event"
           @select-channel="selectChannel"
           @open-create-channel-dialog="showCreateChannelDialog = true"
         />
-
-        <!-- friends zoznam -->
-        <!-- pouzijeme nas komponent FriendListSide -->
-        <FriendsListSide
-          :show-friends="showFriends"
-          :is-small-screen="isSmallScreen"
-          :friends="filteredFriends"
-          :active-friend="activeFriend"
-          @update:show-friends="showFriends = $event"
-          @update:friend-filter="friendFilter = $event" 
-          @select-friend="openFriendChat"
-          @open-add-friend-dialog="showAddFriendDialog = true"
-        />
-
         <!-- chatting -->
         <div class="column relative-position" style="flex: 1;">
           <!-- obsah chatu -->
-          <div v-if="activeChannel || activeFriend" class="column" style="flex: 1; overflow: hidden;">
+          <div v-if="activeChannel" class="column" style="flex: 1; overflow: hidden;">
             <div class="q-pa-md row items-center justify-between">
               <div class="text-h6">
-                {{ activeFriend ? activeFriend.name : activeChannel?.name }}
+                {{ activeChannel?.name }}
               </div>
               <!-- menu: only if channel -->
               <div v-if="activeChannel">
@@ -137,17 +74,6 @@
                   </q-menu>
                 </q-btn>
               </div>
-              <div v-if="activeFriend">
-                <q-btn flat round dense icon="more_vert">
-                  <q-menu>
-                    <q-list style="min-width: 150px;">
-                      <q-item clickable v-close-popup @click="removeFriend(activeFriend.id)">
-                        <q-item-section class="text-negative">Remove friend</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-              </div>
             </div>
             <q-separator />
             <!-- messages -->
@@ -159,7 +85,7 @@
                   overflow-y: auto;
                   display: flex;
                   flex-direction: column;
-                  max-height: 63vh;
+                  max-height: 80vh;
                 ">
               <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
                 <q-spinner size="24px" color="primary" />
@@ -237,7 +163,7 @@
         <q-card-section><q-input v-model="newFriendName" label="Friend name" outlined dense autofocus /></q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
-          <q-btn flat label="Add" color="primary" @click="addFriend" />
+          <!-- <q-btn flat label="Add" color="primary" @click="addFriend" /> -->
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -268,7 +194,7 @@
           <q-select
             v-model="selectedFriends"
             multiple
-            :options="friends.map(f => ({ label: f.name, value: f.id }))"
+            :options="users.map(f => ({ label: f.name, value: f.id }))"
             label="Invite people"
             outlined
             dense
@@ -302,7 +228,7 @@
           <q-select
             v-model="selectedFriends"
             multiple
-            :options="friends.map(f => ({ label: f.name, value: f.id }))"
+            :options="users.map(f => ({ label: f.name, value: f.id }))"
             label="Select friends to add"
             outlined
             dense
@@ -402,17 +328,18 @@ import { useQuasar } from 'quasar';
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
 import ChannelListSide from '../components/ChannelListSide.vue';
-import FriendsListSide from '../components/FriendsListSide.vue';
+// import FriendsListSide from '../components/FriendsListSide.vue';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
-interface Friend {
-  id: number;
-  name: string;
-  avatar: string;
-  status: UserStatus;
-  messages?: Message[];
-}
+// interface Friend {
+//   id: number;
+//   name: string;
+//   avatar: string;
+//   status: UserStatus;
+//   messages?: Message[];
+// }
+
 interface Message {
   id: number;
   user: string;
@@ -431,6 +358,11 @@ interface Invitation {
   from: string;
   channel: string;
 }
+
+const channelMembers = computed(() => {
+  if (!activeChannel.value?.members) return [];
+  return users.value.filter(u => activeChannel.value!.members!.includes(u.id));
+});
 
 // Quasar breakpoint
 const $q = useQuasar();
@@ -473,12 +405,7 @@ const toggleChannels = () => {
   if (showChannels.value) showFriends.value = false;
 };
 
-const toggleFriends = () => {
-  showFriends.value = !showFriends.value;
-  if (showFriends.value) showChannels.value = false;
-};
-
-const friends = ref<Friend[]>([
+const users = ref([
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
   {
     id: 2,
@@ -511,8 +438,7 @@ const channels = ref<Channel[]>([
 const invitations = ref<Invitation[]>([{ id: 1, from: 'Tomas', channel: 'Developers' }]);
 
 const activeChannel = ref<Channel | null>(null);
-const activeFriend = ref<Friend | null>(null);
-const currentMessages = computed(() => activeFriend.value?.messages || activeChannel.value?.messages || []);
+const currentMessages = computed(() => activeChannel.value?.messages || []);
 const invitationCount = computed(() => invitations.value.length);
 
 const showAddFriendDialog = ref(false);
@@ -532,21 +458,21 @@ const dummyMessages = Array.from({ length: 40 }, (_, i) => ({
   text: i % 2 === 0 ? `Tvoja správa ${i + 1}` : `Maggie odpoveď ${i + 1}`,
 }));
 
-const maggie = friends.value.find(f => f.name === 'Maggie');
-if (maggie) maggie.messages = dummyMessages;
+const dummy_chat = channels.value.find(f => f.name === 'General');
+if (dummy_chat) dummy_chat.messages = dummyMessages;
 
 // Definícia channelMembers
-const channelMembers = computed(() => {
-  if (!activeChannel.value?.members) return [];
-  return friends.value.filter(f => activeChannel.value!.members!.includes(f.id));
-});
+// const channelMembers = computed(() => {
+//   if (!activeChannel.value?.members) return [];
+//   return users.value.filter(f => activeChannel.value!.members!.includes(f.id));
+// });
 
 // tu je efektivny scroll
 const isLoadingMore = ref(false);
 const loadedMessagesCount = ref(20); //batch mame na 20 sprav
 
 const visibleMessages = computed(() => {
-  if (!activeFriend.value && !activeChannel.value) return [];
+  if (!activeChannel.value) return [];
   const msgs = currentMessages.value || [];
   return msgs.slice(-loadedMessagesCount.value); //ukaze nam tych poslednych 20
 });
@@ -565,7 +491,6 @@ const selectChannel = (ch: Channel) => {
   if (activeChannel.value?.id === ch.id) {
     activeChannel.value = null;  //zrusime vyber a zobrazi placeholder
   } else {
-    activeFriend.value = null;
     activeChannel.value = ch;
     // skryt side panel len na malych obrazovkach
     if (isSmallScreen.value) {
@@ -574,44 +499,32 @@ const selectChannel = (ch: Channel) => {
   }
 };
 
-const openFriendChat = (f: Friend) => {
-  if (activeFriend.value?.id === f.id) {
-    activeFriend.value = null;   //zrus vyber, zobraz placeholder
-  } else {
-    activeChannel.value = null;
-    activeFriend.value = f;
-    if (isSmallScreen.value){
-      showFriends.value = false;
-    }
-  }
-};
+// const addFriend = () => {
+//   const name = newFriendName.value.trim();
+//   if (!name) return;
+//   const nicknameExists = friends.value.some(f => f.name.toLowerCase() === name.toLowerCase());
+//   if (nicknameExists) {
+//     alert('You are already friends with this person!');
+//     return;
+//   }
 
-const addFriend = () => {
-  const name = newFriendName.value.trim();
-  if (!name) return;
-  const nicknameExists = friends.value.some(f => f.name.toLowerCase() === name.toLowerCase());
-  if (nicknameExists) {
-    alert('You are already friends with this person!');
-    return;
-  }
+//   const newFr: Friend = {
+//     id: friends.value.length + 1,
+//     name,
+//     avatar: 'https://cdn.quasar.dev/img/avatar.png',
+//     status: 'offline' as const,
+//     messages: [],
+//   };
+//   friends.value.unshift(newFr);
+//   activeFriend.value = newFr;
+//   newFriendName.value = '';
+//   showAddFriendDialog.value = false;
+// };
 
-  const newFr: Friend = {
-    id: friends.value.length + 1,
-    name,
-    avatar: 'https://cdn.quasar.dev/img/avatar.png',
-    status: 'offline' as const,
-    messages: [],
-  };
-  friends.value.unshift(newFr);
-  activeFriend.value = newFr;
-  newFriendName.value = '';
-  showAddFriendDialog.value = false;
-};
-
-const removeFriend = (id: number) => {
-  friends.value = friends.value.filter(f => f.id !== id);
-  if (activeFriend.value?.id === id) activeFriend.value = null;
-};
+// const removeFriend = (id: number) => {
+//   friends.value = friends.value.filter(f => f.id !== id);
+//   if (activeFriend.value?.id === id) activeFriend.value = null;
+// };
 
 const openInvitations = () => (showInvitationsDialog.value = true);
 const acceptInvite = (id: number) => {
@@ -628,19 +541,12 @@ const acceptInvite = (id: number) => {
 };
 const declineInvite = (id: number) => (invitations.value = invitations.value.filter(i => i.id !== id));
 
-// na filtrovanie v tych side baroch channel a friends 
+// na filtrovanie v tych side baroch channel
 const channelFilter = ref<'all' | 'public' | 'private'>('all');
 const filteredChannels = computed(() => {
   if (channelFilter.value === 'all') return channels.value;
   return channels.value.filter(ch => ch.type === channelFilter.value);
 });
-
-const friendFilter = ref<'all' | 'online' | 'offline' |'dnd'>('all');
-const filteredFriends = computed(() => {
-  if (friendFilter.value === 'all') return friends.value;
-  return friends.value.filter(f => f.status === friendFilter.value);
-});
-
 
 const createChannel = () => {
   const name = newChannelName.value.trim();
@@ -683,7 +589,7 @@ const deleteChannel = () => {
 
 const getChannelMembers = () => {
   if (!activeChannel.value?.members) return [];
-  return friends.value
+  return users.value
     .filter(f => activeChannel.value!.members!.includes(f.id))
     .map(f => ({ label: f.name, value: f.id }));
 };
@@ -758,7 +664,7 @@ onMounted(() => {
   });
 });
 
-watch([activeFriend, activeChannel], async () => {
+watch(activeChannel, async () => {
   await nextTick();
   const el = chatScrollBox.value;
   if (!el) return;
@@ -822,8 +728,8 @@ const sendMessage = () => {
     } else {
       systemMessage.value = "Unknown command: " + text;
     }
-  } else if (activeFriend.value || activeChannel.value) {
-    const target = activeFriend.value ?? activeChannel.value;
+  } else if (activeChannel.value) {
+    const target = activeChannel.value;
     if (target?.messages) {
       target.messages.push({
         id: Date.now(),
