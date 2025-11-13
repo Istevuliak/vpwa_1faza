@@ -78,56 +78,62 @@
             <q-separator />
             <!-- messages -->
             <q-scroll-area
-              ref="chatScrollBox"
+              ref="chatScrollArea"
               class="q-pl-md q-pr-md"
               style="flex: 1; display: flex; flex-direction: column;"
             >
-              <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
-                <q-spinner size="24px" color="primary" />
-              </div>
-              <div
-                v-for="msg in visibleMessages"
-                :key="msg.id"
-                class="q-mb-sm message-container"
+              <q-infinite-scroll
+                @load="onLoadMore"
+                :offset="250"
+                reverse
+                :disable="noMoreMessages"
               >
-                <!-- spravy od nas doprava -->
-                <div
-                  v-if="msg.user === 'You'"
-                  class="row justify-end items-start q-gutter-sm"
-                >
-                  <div 
-                  :class="{ 'mention-message q-pa-sm rounded-borders': msg.text.includes('@'), 'bg-primary text-white q-pa-sm rounded-borders': !msg.text.includes('@') }"
-                  style="text-align: end;"
-                  >
-                    {{ msg.text }}
-                  </div>
+                <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
+                  <q-spinner size="24px" color="primary" />
                 </div>
-                <!-- ostatni dolava -->
-                <div v-else class="row justify-start items-end q-gutter-sm">
-                  <ProfilePicture
-                    :avatar="getUserByName(msg.user).avatar"
-                    size="40px"
-                    bgColor="grey-3"
-                  />
-                  <div class="column items-start">
-                    <!-- meno nad správou -->
-                    <div class="message-username text-caption text-grey-6 q-mb-xs">
-                      {{ msg.user }}
-                    </div>
-
-                    <!-- text správy -->
+                <div
+                  v-for="msg in visibleMessages"
+                  :key="msg.id"
+                  class="q-mb-sm message-container"
+                >
+                  <!-- spravy od nas doprava -->
+                  <div
+                    v-if="msg.user === 'You'"
+                    class="row justify-end items-start q-gutter-sm"
+                  >
                     <div 
-                    :class="{ 'mention-message q-pa-sm rounded-borders': msg.text.includes('@'), 'bg-grey-2 q-pa-sm rounded-borders': !msg.text.includes('@') }"
+                    :class="{ 'mention-message q-pa-sm rounded-borders': msg.text.includes('@'), 'bg-primary text-white q-pa-sm rounded-borders': !msg.text.includes('@') }"
+                    style="text-align: end;"
                     >
                       {{ msg.text }}
                     </div>
                   </div>
+                  <!-- ostatni dolava -->
+                  <div v-else class="row justify-start items-end q-gutter-sm">
+                    <ProfilePicture
+                      :avatar="getUserByName(msg.user).avatar"
+                      size="40px"
+                      bgColor="grey-3"
+                    />
+                    <div class="column items-start">
+                      <!-- meno nad správou -->
+                      <div class="message-username text-caption text-grey-6 q-mb-xs">
+                        {{ msg.user }}
+                      </div>
+
+                      <!-- text správy -->
+                      <div 
+                      :class="{ 'mention-message q-pa-sm rounded-borders': msg.text.includes('@'), 'bg-grey-2 q-pa-sm rounded-borders': !msg.text.includes('@') }"
+                      >
+                        {{ msg.text }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <!-- Milan nam pise -->
-              <div v-if="activeChannel?.name === 'UniLife'"
-               class="typing-message row justify-start items-end q-gutter-sm text-grey-7"
-               >
+                <!-- Milan nam pise -->
+                <div v-if="activeChannel?.name === 'UniLife'"
+                class="typing-message row justify-start items-end q-gutter-sm text-grey-7"
+                >
                   <ProfilePicture
                     :avatar="getUserByName('Milan').avatar"
                     size="40px"
@@ -145,6 +151,7 @@
                     </div>
                   </div>
                 </div>
+              </q-infinite-scroll>
             </q-scroll-area>
           </div>
           <!-- ak nie je vybrate nic -->
@@ -427,7 +434,7 @@ import { useQuasar } from 'quasar';
 import ProfilePicture from '../components/ProfilePicture.vue';
 import ChatNotification from '../components/ChatNotification.vue';
 import ChannelListSide from '../components/ChannelListSide.vue';
-// import FriendsListSide from '../components/FriendsListSide.vue';
+import type { QScrollArea } from 'quasar';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
@@ -574,6 +581,8 @@ if (dummy_chat) dummy_chat.messages = dummyMessages;
 // tu je efektivny scroll
 const isLoadingMore = ref(false);
 const loadedMessagesCount = ref(20); //batch mame na 20 sprav
+const chatScrollArea = ref<QScrollArea | null>(null);
+const batchSize = 10;
 
 const visibleMessages = computed(() => {
   if (!activeChannel.value) return [];
@@ -581,14 +590,39 @@ const visibleMessages = computed(() => {
   return msgs.slice(-loadedMessagesCount.value); //ukaze nam tych poslednych 20
 });
 
-const loadMoreMessages = async () => {
-  if (isLoadingMore.value) return;
-  if (loadedMessagesCount.value >= (currentMessages.value?.length || 0)) return; //uz je nacitane vsetko
+// const loadMoreMessages = async () => {
+//   if (isLoadingMore.value) return;
+//   if (loadedMessagesCount.value >= (currentMessages.value?.length || 0)) return; //uz je nacitane vsetko
+
+//   isLoadingMore.value = true;
+//   await new Promise(resolve => setTimeout(resolve, 1000)); //simulujeme nacitavanie
+//   loadedMessagesCount.value += 10; //nacita nam dalsich 10
+//   isLoadingMore.value = false;
+// };
+
+//uz mame nacitane vsetko
+const noMoreMessages = computed(() => {
+  return loadedMessagesCount.value >= (currentMessages.value?.length || 0);
+});
+
+const onLoadMore = async (index: number, done: (stop?: boolean) => void) => {
+  if (noMoreMessages.value) {
+    done(true); // zastav infinite scroll
+    return;
+  }
 
   isLoadingMore.value = true;
-  await new Promise(resolve => setTimeout(resolve, 1000)); //simulujeme nacitavanie
-  loadedMessagesCount.value += 10; //nacita nam dalsich 10
+  await new Promise(resolve => setTimeout(resolve, 800)); // simulácia načítania
+  loadedMessagesCount.value += batchSize;
   isLoadingMore.value = false;
+  done();
+};
+
+const scrollToBottom = async () => {
+  await nextTick();
+  if (!chatScrollArea.value) return;
+  const target = chatScrollArea.value.getScrollTarget();
+  target.scrollTop = target.scrollHeight;
 };
 
 const selectChannel = (ch: Channel) => {
@@ -720,7 +754,6 @@ const saveUserStatus = () => {
 // CLI fixne
 const newMessage = ref("");
 const systemMessage = ref("");
-const chatScrollBox = ref<HTMLElement | null>(null);
 
 // notifikacia data
 interface NotificationData {
@@ -752,48 +785,19 @@ onMounted(() => {
     showChannels.value = false;
     showFriends.value = false;
   }
-
-  const scrollArea = chatScrollBox.value;
-  if (!scrollArea) return;
-  const target = scrollArea.getScrollTarget();
-
-  target.addEventListener("scroll", () => {
-    if (target.scrollTop <= 100 && !isLoadingMore.value) {
-      const oldHeight = target.scrollHeight;
-      void (async () => {
-        await loadMoreMessages();
-        await nextTick();
-        target.scrollTop = target.scrollHeight - oldHeight;
-      })();
-    }
-  });
 });
 
+// Po zmene kanála
 watch(activeChannel, async () => {
-  await nextTick();
-  const scrollArea = chatScrollBox.value;
-  if (!scrollArea) return;
-  const target = scrollArea.getScrollTarget();
-
-  target.onscroll = null;
-  target.addEventListener("scroll", () => {
-    if (target.scrollTop <= 100 && !isLoadingMore.value) {
-      const oldHeight = target.scrollHeight;
-      void (async () => {
-        await loadMoreMessages();
-        await nextTick();
-        target.scrollTop = target.scrollHeight - oldHeight;
-      })();
-    }
-  });
-
-  await nextTick();
-  target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
-
-  loadedMessagesCount.value = 20;
+  loadedMessagesCount.value = 20; // reset načítania
   isLoadingMore.value = false;
-}, { immediate: true }
-);
+  await nextTick();
+  await scrollToBottom();
+  // Ak máš málo správ, môžeš rovno načítať viac
+  if (currentMessages.value.length > 20) {
+    // voliteľne: spusti infinite scroll manuálne
+  }
+}, { immediate: true });
 
 // aby sa nam input na vytvorenie channel resetoval po kliknuti na cencel alebo mimo dialogu
 watch(showCreateChannelDialog,(newVal) => {
@@ -810,7 +814,7 @@ watch(showAddFriendDialog,(newVal) => {
   }}
 )
 
-const sendMessage = () => {
+const sendMessage = async () => {
   const text = newMessage.value.trim();
   if (!text) return;
 
@@ -860,11 +864,8 @@ const sendMessage = () => {
         text
       });
     }
-    void nextTick(() => {
-      if (chatScrollBox.value) {
-        chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
-      }
-    });
+    await nextTick();
+    await scrollToBottom();
   } else {
     systemMessage.value = "You are outside of channel";
   }
