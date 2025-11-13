@@ -21,7 +21,7 @@
                 bgColor="grey-4"
               />
             </q-btn>
-            <q-badge color="red" floating transparent>{{ notifications.length }}</q-badge>
+            <q-badge v-if="notifications.length > 0" color="red" floating transparent>{{ notifications.length }}</q-badge>
           </div>
           <q-btn color="dark" flat>
             <q-icon class="material-symbols-outlined q-mr-xs">logout</q-icon>

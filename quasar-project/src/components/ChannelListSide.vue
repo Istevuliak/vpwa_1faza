@@ -15,11 +15,11 @@
       </q-item-label>
 
       <!-- Vytvorenie channelu -->
-      <q-item clickable @click="emit('openCreateChannelDialog')" class="row reverse">
+      <q-item clickable @click="emit('openCreateChannelDialog')" class="row">
+        <q-item-section>Create Channel</q-item-section>
         <q-item-section avatar>
           <q-icon name="add" color="primary" />
         </q-item-section>
-        <q-item-section>Create Channel</q-item-section>
       </q-item>
 
       <!-- Zoznam channelov -->
@@ -88,11 +88,11 @@
       </q-item-label>
 
       <!-- Vytvorenie channelu -->
-      <q-item clickable @click="emit('openCreateChannelDialog')" class="row reverse">
+      <q-item clickable @click="emit('openCreateChannelDialog')" class="row">
+        <q-item-section>Create Channel</q-item-section>
         <q-item-section avatar>
           <q-icon name="add" color="primary" />
         </q-item-section>
-        <q-item-section>Create Channel</q-item-section>
       </q-item>
 
       <!-- Zoznam channelov -->
