@@ -77,16 +77,11 @@
             </div>
             <q-separator />
             <!-- messages -->
-            <div
+            <q-scroll-area
               ref="chatScrollBox"
-              class="q-pa-md"
-                style="
-                  flex: 1;
-                  overflow-y: auto;
-                  display: flex;
-                  flex-direction: column;
-                  max-height: 80vh;
-                ">
+              class="q-pl-md q-pr-md"
+              style="flex: 1; display: flex; flex-direction: column;"
+            >
               <div v-if="isLoadingMore" class="flex justify-center q-my-sm">
                 <q-spinner size="24px" color="primary" />
               </div>
@@ -94,26 +89,63 @@
                 v-for="msg in visibleMessages"
                 :key="msg.id"
                 class="q-mb-sm message-container"
-                :class="{ 'mention-message': msg.text.includes('@') }"
               >
                 <!-- spravy od nas doprava -->
-                <div v-if="msg.user === 'You'" style="text-align: right;">
-                  {{ msg.text }}
+                <div
+                  v-if="msg.user === 'You'"
+                  class="row justify-end items-start q-gutter-sm"
+                >
+                  <div 
+                  :class="{ 'mention-message q-pa-sm rounded-borders': msg.text.includes('@'), 'bg-primary text-white q-pa-sm rounded-borders': !msg.text.includes('@') }"
+                  style="text-align: end;"
+                  >
+                    {{ msg.text }}
+                  </div>
                 </div>
                 <!-- ostatni dolava -->
-                <div v-else style="text-align: left;">
-                  <b>{{ msg.user }}:</b> {{ msg.text }}
+                <div v-else class="row justify-start items-end q-gutter-sm">
+                  <ProfilePicture
+                    :avatar="getUserByName(msg.user).avatar"
+                    size="40px"
+                    bgColor="grey-3"
+                  />
+                  <div class="column items-start">
+                    <!-- meno nad správou -->
+                    <div class="message-username text-caption text-grey-6 q-mb-xs">
+                      {{ msg.user }}
+                    </div>
+
+                    <!-- text správy -->
+                    <div 
+                    :class="{ 'mention-message q-pa-sm rounded-borders': msg.text.includes('@'), 'bg-grey-2 q-pa-sm rounded-borders': !msg.text.includes('@') }"
+                    >
+                      {{ msg.text }}
+                    </div>
+                  </div>
                 </div>
               </div>
               <!-- Milan nam pise -->
-              <div
-                v-if="activeChannel?.name === 'UniLife'"
-                class="typing-message text-caption text-grey-7"
-              >
-                <span class="typing-name"><b>Milan is typing:</b></span>
-                <span class="typing-text">Caute prosim kde najdem github r|</span>
-              </div>
-            </div>
+              <div v-if="activeChannel?.name === 'UniLife'"
+               class="typing-message row justify-start items-end q-gutter-sm text-grey-7"
+               >
+                  <ProfilePicture
+                    :avatar="getUserByName('Milan').avatar"
+                    size="40px"
+                    bgColor="grey-3"
+                  />
+                  <div class="column items-start">
+                    <!-- meno nad správou -->
+                    <div class="message-username text-caption text-grey-6 q-mb-xs">
+                      Milan is typing ...
+                    </div>
+
+                    <!-- text správy -->
+                    <div class="bg-grey-2 q-pa-sm rounded-borders">
+                      Caute prosim kde najdem github r|
+                    </div>
+                  </div>
+                </div>
+            </q-scroll-area>
           </div>
           <!-- ak nie je vybrate nic -->
           <div v-else class="flex flex-center col text-grey" style="flex: 1; text-align: center;">
@@ -159,8 +191,20 @@
     <!-- dialogy -->
     <q-dialog v-model="showAddFriendDialog">
       <q-card style="min-width: 300px;">
-        <q-card-section><div class="text-h6">Add new friend</div></q-card-section>
-        <q-card-section><q-input v-model="newFriendName" label="Friend name" outlined dense autofocus /></q-card-section>
+        <q-card-section>
+          <div class="text-h6">Add new friend</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input
+            v-model="newFriendName"
+            label="Friend name"
+            outlined
+            dense
+            autofocus
+          />
+        </q-card-section>
+
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
           <!-- <q-btn flat label="Add" color="primary" @click="addFriend" /> -->
@@ -170,27 +214,61 @@
 
     <q-dialog v-model="showInvitationsDialog">
       <q-card style="min-width: 350px;">
-        <q-card-section><div class="text-h6">Invitations</div></q-card-section>
+        <q-card-section>
+          <div class="text-h6">Invitations</div>
+        </q-card-section>
+
         <q-list bordered separator>
           <q-item v-for="invite in invitations" :key="invite.id">
-            <q-item-section>{{ invite.from }} invited you to {{ invite.channel }}</q-item-section>
+            <q-item-section>
+              {{ invite.from }} invited you to {{ invite.channel }}
+            </q-item-section>
             <q-item-section side>
-              <q-btn dense flat color="primary" label="Accept" @click="acceptInvite(invite.id)" />
-              <q-btn dense flat color="negative" label="Decline" @click="declineInvite(invite.id)" />
+              <q-btn
+                dense
+                flat
+                color="primary"
+                label="Accept"
+                @click="acceptInvite(invite.id)"
+              />
+              <q-btn
+                dense
+                flat
+                color="negative"
+                label="Decline"
+                @click="declineInvite(invite.id)"
+              />
             </q-item-section>
           </q-item>
-          <q-item v-if="invitations.length === 0"><q-item-section>No invitations yet</q-item-section></q-item>
+
+          <q-item v-if="invitations.length === 0">
+            <q-item-section>No invitations yet</q-item-section>
+          </q-item>
         </q-list>
-        <q-card-actions align="right"><q-btn flat label="Close" color="black" v-close-popup /></q-card-actions>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" color="black" v-close-popup />
+        </q-card-actions>
       </q-card>
     </q-dialog>
 
     <!-- create channel -->
     <q-dialog v-model="showCreateChannelDialog">
       <q-card style="min-width: 400px;">
-        <q-card-section><div class="text-h6">Create Channel</div></q-card-section>
         <q-card-section>
-          <q-input v-model="newChannelName" label="Channel name" outlined dense maxlength="20" autofocus />
+          <div class="text-h6">Create Channel</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input
+            v-model="newChannelName"
+            label="Channel name"
+            outlined
+            dense
+            maxlength="20"
+            autofocus
+          />
+
           <q-select
             v-model="selectedFriends"
             multiple
@@ -201,6 +279,7 @@
             use-chips
             class="q-mt-md"
           />
+
           <q-select
             v-model="newChannelType"
             :options="[
@@ -213,9 +292,10 @@
             class="q-mt-md"
           />
         </q-card-section>
+
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="black" v-close-popup/>
-          <q-btn flat label="Create" color="primary" @click="createChannel"/>
+          <q-btn flat label="Cancel" color="black" v-close-popup />
+          <q-btn flat label="Create" color="primary" @click="createChannel" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -223,7 +303,10 @@
     <!-- pridaj/delete ludi z kanalov -->
     <q-dialog v-model="showAddPeopleDialog">
       <q-card style="min-width: 400px;">
-        <q-card-section><div class="text-h6">Add people to {{ activeChannel?.name }}</div></q-card-section>
+        <q-card-section>
+          <div class="text-h6">Add people to {{ activeChannel?.name }}</div>
+        </q-card-section>
+
         <q-card-section>
           <q-select
             v-model="selectedFriends"
@@ -235,6 +318,7 @@
             use-chips
           />
         </q-card-section>
+
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
           <q-btn flat label="Add" color="primary" @click="addPeopleToChannel" />
@@ -244,7 +328,10 @@
 
     <q-dialog v-model="showRemovePeopleDialog">
       <q-card style="min-width: 400px;">
-        <q-card-section><div class="text-h6">Remove people from {{ activeChannel?.name }}</div></q-card-section>
+        <q-card-section>
+          <div class="text-h6">Remove people from {{ activeChannel?.name }}</div>
+        </q-card-section>
+
         <q-card-section>
           <q-select
             v-model="selectedFriends"
@@ -256,6 +343,7 @@
             use-chips
           />
         </q-card-section>
+
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
           <q-btn flat label="Remove" color="primary" @click="removePeopleFromChannel" />
@@ -269,6 +357,7 @@
         <q-card-section>
           <div class="text-h6">Set your status</div>
         </q-card-section>
+
         <q-card-section>
           <q-select
             v-model="userStatus"
@@ -280,6 +369,7 @@
             dense
           />
         </q-card-section>
+
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
           <q-btn flat label="Save" color="primary" @click="saveUserStatus" />
@@ -293,7 +383,9 @@
         <q-card-section>
           <div class="text-h6">Members of {{ activeChannel?.name }}</div>
         </q-card-section>
-        <q-card-section style="max-height: 300px; overflow-y: auto;"> <!-- toto je scrolling -->
+
+        <q-card-section style="max-height: 300px; overflow-y: auto;">
+          <!-- toto je scrolling -->
           <q-list bordered separator>
             <q-item v-for="member in channelMembers" :key="member.id">
               <q-item-section>
@@ -305,17 +397,22 @@
                       bgColor="grey-3"
                       class="q-mr-sm"
                     />
-                    <div class="status-indicator q-ml-sm" :class="`status-${member.status}`"></div>
+                    <div
+                      class="status-indicator q-ml-sm"
+                      :class="`status-${member.status}`"
+                    ></div>
                   </div>
                   <span>{{ member.name }}</span>
                 </div>
               </q-item-section>
             </q-item>
+
             <q-item v-if="!channelMembers.length">
               <q-item-section>No members in this channel</q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
+
         <q-card-actions align="right">
           <q-btn flat label="Close" color="black" v-close-popup />
         </q-card-actions>
@@ -334,13 +431,13 @@ import ChannelListSide from '../components/ChannelListSide.vue';
 
 type UserStatus = 'online' | 'dnd' | 'offline';
 
-// interface Friend {
-//   id: number;
-//   name: string;
-//   avatar: string;
-//   status: UserStatus;
-//   messages?: Message[];
-// }
+interface User {
+  id: number;
+  name: string;
+  avatar: string;
+  status: UserStatus;
+  messages?: Message[];
+}
 
 interface Message {
   id: number;
@@ -407,7 +504,7 @@ const toggleChannels = () => {
   if (showChannels.value) showFriends.value = false;
 };
 
-const users = ref([
+const users = ref<User[]>([
   { id: 1, name: 'Milan', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', status: 'online', messages: [] },
   {
     id: 2,
@@ -430,6 +527,11 @@ const users = ref([
   { id: 10, name: 'Juraj', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', status: 'online', messages: [] },
   { id: 11, name: 'MAx', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'offline', messages: [] }
 ]);
+
+const getUserByName = (name: string) =>
+  users.value.find((m) => m.name === name) ||
+  { avatar: 'https://cdn.quasar.dev/img/avatar.png' } // fallback
+
 
 const newChannelType = ref<'public' | 'private'>('public');
 const channels = ref<Channel[]>([
@@ -555,7 +657,6 @@ const createChannel = () => {
   if (!name) return;
 
   const nameExists = channels.value.some(ch => ch.name.toLowerCase() === name.toLowerCase())
-  activeFriend.value = null
   if (nameExists) {
     alert('Channel name already exists!');
     return;
@@ -652,16 +753,17 @@ onMounted(() => {
     showFriends.value = false;
   }
 
-  const el = chatScrollBox.value;
-  if (!el) return;
+  const scrollArea = chatScrollBox.value;
+  if (!scrollArea) return;
+  const target = scrollArea.getScrollTarget();
 
-  el.addEventListener('scroll', () => {
-    if (el.scrollTop <= 100 && !isLoadingMore.value) {
-      const oldHeight = el.scrollHeight;
+  target.addEventListener("scroll", () => {
+    if (target.scrollTop <= 100 && !isLoadingMore.value) {
+      const oldHeight = target.scrollHeight;
       void (async () => {
         await loadMoreMessages();
         await nextTick();
-        el.scrollTop = el.scrollHeight - oldHeight;
+        target.scrollTop = target.scrollHeight - oldHeight;
       })();
     }
   });
@@ -669,29 +771,29 @@ onMounted(() => {
 
 watch(activeChannel, async () => {
   await nextTick();
-  const el = chatScrollBox.value;
-  if (!el) return;
+  const scrollArea = chatScrollBox.value;
+  if (!scrollArea) return;
+  const target = scrollArea.getScrollTarget();
 
-  el.onscroll = null;
-
-  el.addEventListener('scroll', () => {
-    if (el.scrollTop <= 100 && !isLoadingMore.value) {
-      const oldHeight = el.scrollHeight;
+  target.onscroll = null;
+  target.addEventListener("scroll", () => {
+    if (target.scrollTop <= 100 && !isLoadingMore.value) {
+      const oldHeight = target.scrollHeight;
       void (async () => {
         await loadMoreMessages();
         await nextTick();
-        el.scrollTop = el.scrollHeight - oldHeight;
+        target.scrollTop = target.scrollHeight - oldHeight;
       })();
     }
   });
+
   await nextTick();
-  if (chatScrollBox.value) {
-    chatScrollBox.value.scrollTop = chatScrollBox.value.scrollHeight;
-  }
-  loadedMessagesCount.value = 20; // vždy začni s 20 správami
+  target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
+
+  loadedMessagesCount.value = 20;
   isLoadingMore.value = false;
-  }, { immediate: true }
-); 
+}, { immediate: true }
+);
 
 // aby sa nam input na vytvorenie channel resetoval po kliknuti na cencel alebo mimo dialogu
 watch(showCreateChannelDialog,(newVal) => {
@@ -778,12 +880,10 @@ const sendMessage = () => {
   max-height: 150px;
   overflow-y: auto;
 }
-.message-container {
-  padding: 8px;
-  border-radius: 4px;
-}
 .mention-message {
-  background-color: #9bc3ff;
+  border-radius: 4px;
+  width: 100%;
+  background-color: #fdf3bc;
 }
 .status-indicator {
   width: 12px;
@@ -822,12 +922,6 @@ const sendMessage = () => {
   bottom: 100px;
   left: 12px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #f0f0f0;
-  border-radius: 12px;
-  padding: 6px 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .typing-text {
   color: #666;
