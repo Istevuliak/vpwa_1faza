@@ -67,6 +67,9 @@
                       <q-item clickable v-close-popup @click="leaveChannel">
                         <q-item-section>Leave channel</q-item-section>
                       </q-item>
+                      <q-item clickable v-close-popup @click="showMembersDialog = true">
+                        <q-item-section>Members</q-item-section>
+                      </q-item>
                       <q-item clickable v-close-popup v-if="activeChannel?.isAdmin" @click="deleteChannel">
                         <q-item-section class="text-negative">Delete channel</q-item-section>
                       </q-item>
@@ -203,7 +206,7 @@
     </div>
 
     <!-- dialogy -->
-    <q-dialog v-model="showAddFriendDialog">
+    <!-- <q-dialog v-model="showAddFriendDialog">
       <q-card style="min-width: 300px;">
         <q-card-section>
           <div class="text-h6">Add new friend</div>
@@ -221,15 +224,16 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="black" v-close-popup />
-          <!-- <q-btn flat label="Add" color="primary" @click="addFriend" /> -->
+          <q-btn flat label="Add" color="primary" @click="addFriend" />
         </q-card-actions>
       </q-card>
-    </q-dialog>
+    </q-dialog> -->
 
     <q-dialog v-model="showInvitationsDialog">
       <q-card style="min-width: 350px;">
-        <q-card-section>
+        <q-card-section class="row justify-between items-center">
           <div class="text-h6">Invitations</div>
+          <q-btn flat icon="close" v-close-popup></q-btn>
         </q-card-section>
 
         <q-list bordered separator>
@@ -248,7 +252,7 @@
               <q-btn
                 dense
                 flat
-                color="negative"
+                color="black"
                 label="Decline"
                 @click="declineInvite(invite.id)"
               />
@@ -259,10 +263,6 @@
             <q-item-section>No invitations yet</q-item-section>
           </q-item>
         </q-list>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Close" color="black" v-close-popup />
-        </q-card-actions>
       </q-card>
     </q-dialog>
 
@@ -317,8 +317,9 @@
     <!-- pridaj/delete ludi z kanalov -->
     <q-dialog v-model="showAddPeopleDialog">
       <q-card style="min-width: 400px;">
-        <q-card-section>
+        <q-card-section class="row justify-between items-center">
           <div class="text-h6">Add people to {{ activeChannel?.name }}</div>
+          <q-btn flat icon="close" v-close-popup></q-btn>
         </q-card-section>
 
         <q-card-section>
@@ -342,8 +343,9 @@
 
     <q-dialog v-model="showRemovePeopleDialog">
       <q-card style="min-width: 400px;">
-        <q-card-section>
+        <q-card-section class="row justify-between items-center">
           <div class="text-h6">Remove people from {{ activeChannel?.name }}</div>
+          <q-btn flat icon="close" v-close-popup></q-btn>
         </q-card-section>
 
         <q-card-section>
@@ -368,8 +370,9 @@
     <!-- Dialog pre nastavenie statusu usera -->
     <q-dialog v-model="showStatusDialog">
       <q-card style="min-width: 300px;">
-        <q-card-section>
+        <q-card-section class="row justify-between items-center">
           <div class="text-h6">Set your status</div>
+          <q-btn flat icon="close" v-close-popup></q-btn>
         </q-card-section>
 
         <q-card-section>
@@ -394,8 +397,9 @@
     <!-- Dialog pre zoznam členov kanála -->
     <q-dialog v-model="showMembersDialog">
       <q-card style="min-width: 300px;">
-        <q-card-section>
+        <q-card-section class="row justify-between items-center">
           <div class="text-h6">Members of {{ activeChannel?.name }}</div>
+          <q-btn flat icon="close" v-close-popup></q-btn>
         </q-card-section>
 
         <q-card-section style="max-height: 300px; overflow-y: auto;">
@@ -565,14 +569,14 @@ const activeChannel = ref<Channel | null>(null);
 const currentMessages = computed(() => activeChannel.value?.messages || []);
 const invitationCount = computed(() => invitations.value.length);
 
-const showAddFriendDialog = ref(false);
+// const showAddFriendDialog = ref(false);
 const showInvitationsDialog = ref(false);
 const showCreateChannelDialog = ref(false);
 const showAddPeopleDialog = ref(false);
 const showRemovePeopleDialog = ref(false);
 const showStatusDialog = ref(false);
 const showMembersDialog = ref(false);
-const newFriendName = ref('');
+// const newFriendName = ref('');
 const newChannelName = ref('');
 const selectedFriends = ref<number[]>([]);
 
@@ -821,11 +825,11 @@ watch(showCreateChannelDialog,(newVal) => {
   }}
 )
 // aby sa nam input na pridanie friend resetoval po kliknuti na cencel alebo mimo dialogu
-watch(showAddFriendDialog,(newVal) => {
-  if (!newVal) {
-    newFriendName.value = ''
-  }}
-)
+// watch(showAddFriendDialog,(newVal) => {
+//   if (!newVal) {
+//     newFriendName.value = ''
+//   }}
+// )
 
 const sendMessage = async () => {
   const text = newMessage.value.trim();
