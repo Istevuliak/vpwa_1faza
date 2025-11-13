@@ -110,11 +110,18 @@
                   </div>
                   <!-- ostatni dolava -->
                   <div v-else class="row justify-start items-end q-gutter-sm">
-                    <ProfilePicture
-                      :avatar="getUserByName(msg.user).avatar"
-                      size="40px"
-                      bgColor="grey-3"
+                    <div class="relative-position">
+                      <ProfilePicture
+                        :avatar="getUserByName(msg.user).avatar"
+                        size="40px"
+                        bgColor="grey-3"
+                        class="q-mr-sm"
                     />
+                    <div
+                      class="status-indicator q-ml-sm"
+                      :class="`status-${getUserByName(msg.user).status}`"
+                    ></div>
+                    </div>
                     <div class="column items-start">
                       <!-- meno nad správou -->
                       <div class="message-username text-caption text-grey-6 q-mb-xs">
@@ -535,10 +542,16 @@ const users = ref<User[]>([
   { id: 11, name: 'MAx', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', status: 'offline', messages: [] }
 ]);
 
-const getUserByName = (name: string) =>
-  users.value.find((m) => m.name === name) ||
-  { avatar: 'https://cdn.quasar.dev/img/avatar.png' } // fallback
-
+const getUserByName = (name: string): User => {
+  return (
+    users.value.find((u) => u.name === name) || {
+      id: -1,
+      name,
+      avatar: 'https://cdn.quasar.dev/img/avatar.png',
+      status: 'offline' as const,
+    }
+  );
+};
 
 const newChannelType = ref<'public' | 'private'>('public');
 const channels = ref<Channel[]>([
