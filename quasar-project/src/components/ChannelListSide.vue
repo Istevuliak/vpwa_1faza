@@ -1,76 +1,62 @@
 <template>
   <!-- Channels zoznam ako pop-up (pre malé obrazovky) -->
-  <q-dialog
-    v-model="localShowChannels"
-    v-if="isSmallScreen"
-    seamless
-    position="left"
-    class="channel-dialog"
+  <div
+    v-if="isSmallScreen && localShowChannels"
+    class="channels-overlay bg-yellow-1 q-pa-sm"
+    style="width: 250px;"
   >
-    <q-card class="bg-yellow-1 q-pa-sm" style="width: 250px;">
-      <q-list bordered>
-        <q-item-label header>
-          <div class="row items-center">
-            <span>Channels</span>
-            <q-space />
-            <q-btn flat round dense icon="more_vert">
-              <q-menu>
-                <q-list style="min-width: 150px;">
-                  <q-item clickable v-close-popup @click="emit('update:channelFilter', 'all')">
-                    <q-item-section>All channels</q-item-section>
-                  </q-item>
-                  <q-item clickable v-close-popup @click="emit('update:channelFilter', 'public')">
-                    <q-item-section>Public channels</q-item-section>
-                  </q-item>
-                  <q-item clickable v-close-popup @click="emit('update:channelFilter', 'private')">
-                    <q-item-section>Private channels</q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
+    <q-list bordered>
+      <q-item-label header>
+        <div class="row items-center">
+          <span>Channels</span>
+          <q-space />
+          <q-btn flat round dense icon="close" @click="localShowChannels = false" />
+        </div>
+      </q-item-label>
+
+      <!-- Vytvorenie channelu -->
+      <q-item clickable @click="emit('openCreateChannelDialog')" class="row reverse">
+        <q-item-section avatar>
+          <q-icon name="add" color="primary" />
+        </q-item-section>
+        <q-item-section>Create Channel</q-item-section>
+      </q-item>
+
+      <!-- Zoznam channelov -->
+      <q-item
+        v-for="channel in channels"
+        :key="channel.id"
+        clickable
+        @click="
+          emit('selectChannel', channel);
+          localShowChannels = false;
+        "
+        :active="activeChannel?.id === channel.id"
+        active-class="bg-primary text-white"
+      >
+        <q-item-section>
+          <div class="row items-center justify-between">
+            <span>{{ channel.name }}</span>
+            <q-icon
+              v-if="channel.type === 'public'"
+              class="material-symbols-outlined symbol"
+            >public</q-icon>
+            <q-icon
+              v-else
+              class="material-symbols-outlined symbol"
+            >lock</q-icon>
           </div>
-        </q-item-label>
+          <div v-if="channel.name === 'UniLife'" class="typing-indicator">
+            <b class="typing-name text-caption text-grey-8">Milan is typing</b>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </q-item-section>
+      </q-item>
+    </q-list>
+  </div>
 
-        <!-- Vytvorenie channelu -->
-        <q-item clickable @click="emit('openCreateChannelDialog')" class="row">
-          <q-item-section>Create Channel</q-item-section>
-          <q-item-section avatar>
-            <q-icon name="add" color="primary" />
-          </q-item-section>
-        </q-item>
-
-        <!-- Zoznam channelov -->
-        <q-item
-          v-for="channel in channels"
-          :key="channel.id"
-          clickable
-          @click="emit('selectChannel', channel)"
-          :active="activeChannel?.id === channel.id"
-          active-class="bg-primary text-white"
-        >
-          <q-item-section>
-            <div class="row items-center justify-between">
-              <span>{{ channel.name }}</span>
-              <q-icon
-                v-if="channel.type === 'public'"
-                class="material-symbols-outlined symbol"
-              >public</q-icon>
-              <q-icon
-                v-else
-                class="material-symbols-outlined symbol"
-              >lock</q-icon>
-            </div>
-            <div v-if="channel.name === 'UniLife'" class="typing-indicator">
-              <b class="typing-name text-caption text-grey-8">Milan is typing</b>
-              <span class="dot"></span>
-              <span class="dot"></span>
-              <span class="dot"></span>
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-card>
-  </q-dialog>
 
   <!-- Channels panel pre veľké obrazovky -->
   <div
@@ -180,6 +166,19 @@ watch(() => props.showChannels, (newVal) => {
 watch(localShowChannels, (newVal) => {
   emit('update:showChannels', newVal)
 })
+
+// keď sa zmení veľkosť obrazovky, automaticky zavri drawer
+watch(
+  () => props.isSmallScreen,
+  (isSmall) => {
+    if (isSmall) {
+      // keď prejde na malú obrazovku -> zavri
+      localShowChannels.value = false
+      emit('update:showChannels', false)
+    }
+  }
+)
+
 </script>
 
 <style scoped>
@@ -220,4 +219,12 @@ watch(localShowChannels, (newVal) => {
     opacity: 1;
   }
 }
+
+.channels-overlay {
+  position: fixed;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
 </style>
